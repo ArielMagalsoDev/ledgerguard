@@ -9,12 +9,16 @@ const NAV = [
 ];
 
 // Traced from agero.framer.website's own status chip (an inline SVG, not a
-// bordered/notched card): a single flared shape, flat and nearly full-width
-// at the very top edge, tapering via concave curves to a narrower flat pill
-// at the bottom where the dot + label sit. Path below is Agero's own,
-// horizontally scaled (x *= 583/342, y untouched) to fit our longer label.
-const CHIP_PATH =
-  "M 9.30 0 C -92.47 0 676.5 0 573.6 0 C 470.7 0 533.2 36 432.5 36 C 331.9 36 184.3 36 152.5 36 C 46.5 36 111.1 0 9.30 0 Z";
+// bordered/notched card): a single flared shape, flat at the top edge,
+// tapering via concave curves to a narrower flat pill at the bottom where
+// the dot + label sit. Agero's own flare — the horizontal distance each
+// side widens beyond the bottom pill — is a fixed ~83px, not a proportion
+// of the pill width, so it's kept fixed here too (measured bottom pill
+// width for our longer label + that same 83px flare each side), rather
+// than naively scaling Agero's whole shape up to fit more text — that
+// first attempt made the chip nearly twice as wide, relative to the page,
+// as Agero's actual one.
+const CHIP_PATH = "M 5 0 L 431 0 C 371 0 408 36 348 36 L 88 36 C 28 36 65 0 5 0 Z";
 
 export function SiteHeader() {
   return (
@@ -22,7 +26,7 @@ export function SiteHeader() {
       <header className="relative">
         <div className="flex justify-center">
           <div className="status-chip-shape">
-            <svg viewBox="0 0 583 36" preserveAspectRatio="none" aria-hidden>
+            <svg viewBox="0 0 436 36" preserveAspectRatio="none" aria-hidden>
               <path d={CHIP_PATH} fill="var(--ink)" />
             </svg>
             <div className="relative flex h-full items-center justify-center gap-2 px-4 text-[11px] text-paper-raised sm:text-xs">

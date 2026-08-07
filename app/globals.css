@@ -152,8 +152,8 @@ body {
    components/site-header.tsx for the traced path. */
 .status-chip-shape {
   position: relative;
-  width: min(583px, 92vw);
-  aspect-ratio: 583 / 36;
+  width: min(436px, 92vw);
+  aspect-ratio: 436 / 36;
 }
 .status-chip-shape svg {
   position: absolute;
