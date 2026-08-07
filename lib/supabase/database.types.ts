@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounting_bills: {
+        Row: {
+          created_at: string
+          decision_id: string
+          error_message: string | null
+          external_bill_id: string | null
+          external_doc_number: string | null
+          id: string
+          idempotency_key: string
+          invoice_id: string
+          provider: string
+          request_payload: Json
+          response_summary: Json | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          decision_id: string
+          error_message?: string | null
+          external_bill_id?: string | null
+          external_doc_number?: string | null
+          id?: string
+          idempotency_key: string
+          invoice_id: string
+          provider?: string
+          request_payload?: Json
+          response_summary?: Json | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          decision_id?: string
+          error_message?: string | null
+          external_bill_id?: string | null
+          external_doc_number?: string | null
+          id?: string
+          idempotency_key?: string
+          invoice_id?: string
+          provider?: string
+          request_payload?: Json
+          response_summary?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_bills_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_bills_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accounting_connections: {
+        Row: {
+          access_token: string
+          access_token_expires_at: string
+          connected_at: string
+          environment: string
+          id: string
+          provider: string
+          realm_id: string
+          refresh_token: string
+          refresh_token_expires_at: string
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          access_token_expires_at: string
+          connected_at?: string
+          environment?: string
+          id?: string
+          provider?: string
+          realm_id: string
+          refresh_token: string
+          refresh_token_expires_at: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          access_token_expires_at?: string
+          connected_at?: string
+          environment?: string
+          id?: string
+          provider?: string
+          realm_id?: string
+          refresh_token?: string
+          refresh_token_expires_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       approvers: {
         Row: {
           email: string | null

@@ -10,12 +10,14 @@
     "generate-pdfs": "tsx --env-file=.env.local scripts/generate-invoice-pdfs.ts",
     "run-demo-pipeline": "tsx --env-file=.env.local scripts/run-demo-pipeline.ts",
     "test-guardrails": "tsx scripts/test-extraction-guardrails.ts",
-    "test-matching": "tsx --env-file=.env.local scripts/test-matching-guardrails.ts"
+    "test-matching": "tsx --env-file=.env.local scripts/test-matching-guardrails.ts",
+    "test-accounting": "tsx --env-file=.env.local scripts/test-accounting.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
     "@supabase/supabase-js": "^2.112.2",
     "clsx": "^2.1.1",
+    "intuit-oauth": "^4.2.5",
     "lucide-react": "^1.29.0",
     "next": "16.3.0",
     "pdf-lib": "^1.17.1",
