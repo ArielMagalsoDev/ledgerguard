@@ -4,7 +4,7 @@ import { EVAL_CASES, EVAL_DATASET_NOTE, CATEGORY_META, type EvalCategory } from 
 import { getLatestEvalRun } from "@/lib/evals/latest-run";
 
 export const metadata: Metadata = {
-  title: "Evaluations — LedgerSentry",
+  title: "Evaluations — Ledger Guard",
   description: "Extraction and control scorecard.",
 };
 

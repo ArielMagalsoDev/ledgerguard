@@ -236,11 +236,11 @@ async function createVendor(db: Db, name: string): Promise<QboVendor> {
 /**
  * QuickBooks has no notion of Keystone's approved-supplier master, so a
  * sandbox company starts with none of these vendors. Creating the AP vendor
- * record for an already-approved LedgerSentry supplier is a lower-risk,
+ * record for an already-approved Ledger Guard supplier is a lower-risk,
  * one-directional sync (name only — bank details never flow into it) and is
  * standard practice for accounting-system integrations. This is NOT the
  * same guardrail as "never auto-create a supplier" in lib/matching/supplier.ts
- * — that rule protects LedgerSentry's own fraud/duplicate-payment controls;
+ * — that rule protects Ledger Guard's own fraud/duplicate-payment controls;
  * this just mirrors an already-vetted supplier into the books.
  */
 export async function getOrCreateVendor(db: Db, name: string): Promise<{ vendor: QboVendor; created: boolean }> {
@@ -260,7 +260,7 @@ export async function findExistingBillByDocNumber(db: Db, vendorId: string, docN
 let cachedExpenseAccountId: string | null = null;
 
 /**
- * LedgerSentry's fictional GL codes (e.g. "6120-SUPPLIES", from
+ * Ledger Guard's fictional GL codes (e.g. "6120-SUPPLIES", from
  * lib/matching/routing.ts) don't exist in an unmodified QBO sandbox's chart
  * of accounts — a real deployment would sync a real chart of accounts first,
  * which is out of scope for this demo. Every bill line instead posts to the
@@ -363,7 +363,7 @@ export async function createDraftBill(
     TxnDate: changeSet.invoiceDate,
     DueDate: changeSet.dueDate,
     CurrencyRef: { value: changeSet.currency },
-    PrivateNote: `LedgerSentry draft — cost center ${changeSet.costCenter}. Never mark paid from this integration. idempotencyKey=${changeSet.idempotencyKey}`,
+    PrivateNote: `Ledger Guard draft — cost center ${changeSet.costCenter}. Never mark paid from this integration. idempotencyKey=${changeSet.idempotencyKey}`,
     Line: changeSet.lineItems.map((li) => ({
       DetailType: "AccountBasedExpenseLineDetail",
       Amount: Number(li.amount),

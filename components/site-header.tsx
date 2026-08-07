@@ -41,7 +41,7 @@ export function SiteHeader() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 pb-4 pt-9 sm:px-8 sm:pt-10">
           <Link href="/" className="flex items-baseline gap-2">
             <span className="font-display text-xl tracking-tight text-ink">
-              LedgerSentry<span className="text-accent">.</span>
+              Ledger Guard<span className="text-accent">.</span>
             </span>
           </Link>
           <nav className="hidden items-center gap-1 text-sm md:flex">

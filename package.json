@@ -1,5 +1,5 @@
 {
-  "name": "ledgersentry",
+  "name": "ledger-guard",
   "version": "0.1.0",
   "private": true,
   "scripts": {

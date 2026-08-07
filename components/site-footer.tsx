@@ -15,7 +15,7 @@ export function SiteFooter() {
         <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <span className="font-display text-2xl tracking-tight text-dark-ink">
-              LedgerSentry<span className="text-accent">.</span>
+              Ledger Guard<span className="text-accent">.</span>
             </span>
             <p className="mt-3 max-w-sm text-sm text-ink-muted">
               Built by Ariel Magalso · part of a three-project portfolio with
@@ -32,7 +32,7 @@ export function SiteFooter() {
           </nav>
         </div>
         <p className="mt-10 border-t border-dark-rule pt-6 font-tabular text-xs leading-relaxed text-ink-muted">
-          LedgerSentry is a portfolio demonstration. Keystone Facilities Group,
+          Ledger Guard is a portfolio demonstration. Keystone Facilities Group,
           every supplier, purchase order, invoice, and dollar figure on this
           site is fictional. No real financial or supplier data is processed.
           No workflow — in this demo or described in its design — is capable

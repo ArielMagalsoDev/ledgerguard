@@ -1,4 +1,4 @@
-# LedgerSentry
+# Ledger Guard
 
 AI-assisted invoice-exception automation for accounts payable — a portfolio
 demo. Extracts invoice data with visible evidence, recalculates every amount

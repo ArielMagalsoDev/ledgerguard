@@ -665,7 +665,7 @@ export const SCENARIOS: DemoScenario[] = [
     },
     auditEvents: s1Audit,
     narrative: {
-      whatHappened: "Every check passed: supplier identity, arithmetic, PO match, and delivery confirmation all agree. LedgerSentry proposes a draft bill and routes the invoice to the property manager — the amount is under the $1,000 property-manager threshold.",
+      whatHappened: "Every check passed: supplier identity, arithmetic, PO match, and delivery confirmation all agree. Ledger Guard proposes a draft bill and routes the invoice to the property manager — the amount is under the $1,000 property-manager threshold.",
       whyItMatters: "This is the boring path, and it should be boring. No AI judgment call decided this invoice was safe — five independent deterministic checks did, and every one of them is visible.",
     },
   },
@@ -759,7 +759,7 @@ export const SCENARIOS: DemoScenario[] = [
     },
     auditEvents: s2Audit,
     narrative: {
-      whatHappened: "The math is correct — that's exactly why this is dangerous to auto-approve on arithmetic alone. Two lines breach PO tolerance: a $250 unit-price overage and 6 unauthorized labor hours. LedgerSentry withholds the accounting draft and routes to both the finance manager (the $5,000.01–$25,000 band this invoice falls in) and AP.",
+      whatHappened: "The math is correct — that's exactly why this is dangerous to auto-approve on arithmetic alone. Two lines breach PO tolerance: a $250 unit-price overage and 6 unauthorized labor hours. Ledger Guard withholds the accounting draft and routes to both the finance manager (the $5,000.01–$25,000 band this invoice falls in) and AP.",
       whyItMatters: "An invoice that adds up correctly is not the same as an invoice that was authorized. Only PO and receipt evidence — not arithmetic — can confirm that.",
     },
   },
@@ -830,7 +830,7 @@ export const SCENARIOS: DemoScenario[] = [
     },
     auditEvents: s3Audit,
     narrative: {
-      whatHappened: "The file itself looks new — different name, different hash — but the invoice's identity (supplier, invoice number, date, total) is identical to one already on file. LedgerSentry holds it before any approval task or accounting draft is created.",
+      whatHappened: "The file itself looks new — different name, different hash — but the invoice's identity (supplier, invoice number, date, total) is identical to one already on file. Ledger Guard holds it before any approval task or accounting draft is created.",
       whyItMatters: "A renamed rescan is exactly the kind of duplicate that slips past file-hash-only checks. Identity-based duplicate detection catches what hash comparison alone would miss.",
     },
   },
@@ -894,7 +894,7 @@ export const SCENARIOS: DemoScenario[] = [
     },
     auditEvents: s4Audit,
     narrative: {
-      whatHappened: "The supplier is real and known — tax ID matches exactly. But the remittance bank details on this invoice differ from the verified supplier master. LedgerSentry blocks the invoice and never touches the supplier record.",
+      whatHappened: "The supplier is real and known — tax ID matches exactly. But the remittance bank details on this invoice differ from the verified supplier master. Ledger Guard blocks the invoice and never touches the supplier record.",
       whyItMatters: "This is the exact pattern behind real-world vendor-impersonation fraud: a legitimate supplier's identity, wrapped around new payment instructions. Supplier-identity match is necessary but never sufficient to authorize a payment change.",
     },
   },

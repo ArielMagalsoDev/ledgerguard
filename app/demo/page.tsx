@@ -3,7 +3,7 @@ import { Workbench } from "@/app/demo/workbench";
 import { getAllLiveScenarios } from "@/lib/queue/live-scenario";
 
 export const metadata: Metadata = {
-  title: "AP Workbench — LedgerSentry demo",
+  title: "AP Workbench — Ledger Guard demo",
   description: "Five guided fictional invoice scenarios, evidence-linked end to end.",
 };
 
