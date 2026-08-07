@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 const NAV = [
   { href: "/demo", label: "Demo" },
@@ -21,54 +24,79 @@ const NAV = [
 const CHIP_PATH = "M 5 0 L 431 0 C 371 0 408 36 348 36 L 88 36 C 28 36 65 0 5 0 Z";
 
 export function SiteHeader() {
+  // position: fixed + a measured spacer instead of position: sticky.
+  // Sticky already checked out under direct DOM measurement (top stayed 0
+  // at every scroll offset tested), but a reported "doesn't stay at top"
+  // is worth removing all doubt on rather than re-asserting it's fine —
+  // fixed is the more bulletproof pattern (no dependency on the sticky
+  // containing-block rules a nested flex/transform ancestor can quietly
+  // break) and is visually identical. The spacer keeps page content from
+  // jumping under the now out-of-flow header, measured live so it tracks
+  // the header's real height (chip + nav row, taller once mobile nav wraps).
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [spacerHeight, setSpacerHeight] = useState(0);
+
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const update = () => setSpacerHeight(el.offsetHeight);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="sticky top-0 z-40 bg-paper-light">
-      <header className="relative">
-        <div className="flex justify-center">
-          <div className="status-chip-shape">
-            <svg viewBox="0 0 436 36" preserveAspectRatio="none" aria-hidden>
-              <path d={CHIP_PATH} fill="var(--ink)" />
-            </svg>
-            <div className="relative flex h-full items-center justify-center gap-2 px-4 text-[11px] text-paper-raised sm:text-xs">
-              <span className="status-chip-dot" />
-              <span className="whitespace-nowrap">Live pipeline · real Claude extraction</span>
+    <>
+      <div ref={headerRef} className="fixed inset-x-0 top-0 z-40 bg-paper-light">
+        <header className="relative">
+          <div className="flex justify-center">
+            <div className="status-chip-shape">
+              <svg viewBox="0 0 436 36" preserveAspectRatio="none" aria-hidden>
+                <path d={CHIP_PATH} fill="var(--ink)" />
+              </svg>
+              <div className="relative flex h-full items-center justify-center gap-2 px-4 text-[11px] text-paper-raised sm:text-xs">
+                <span className="status-chip-dot" />
+                <span className="whitespace-nowrap">Live pipeline · real Claude extraction</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 pb-4 pt-9 sm:px-8 sm:pt-10">
-          <Link href="/" className="flex items-baseline gap-2">
-            <span className="font-display text-xl tracking-tight text-ink">
-              LedgerSentry<span className="text-accent">.</span>
-            </span>
-          </Link>
-          <nav className="hidden items-center gap-1 text-sm md:flex">
+          <div className="mx-auto flex max-w-6xl items-center justify-between px-5 pb-4 pt-9 sm:px-8 sm:pt-10">
+            <Link href="/" className="flex items-baseline gap-2">
+              <span className="font-display text-xl tracking-tight text-ink">
+                LedgerSentry<span className="text-accent">.</span>
+              </span>
+            </Link>
+            <nav className="hidden items-center gap-1 text-sm md:flex">
+              {NAV.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-full px-3 py-1.5 text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+            <Link href="/demo" className="btn-pill btn-pill-primary">
+              Run demo
+            </Link>
+          </div>
+          {/* Mobile nav — no hamburger/overlay yet, just wraps under the bar. */}
+          <nav className="flex items-center gap-1 overflow-x-auto px-5 pb-3 text-sm md:hidden">
             {NAV.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="rounded-full px-3 py-1.5 text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+                className="shrink-0 rounded-full px-3 py-1.5 text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
               >
                 {item.label}
               </Link>
             ))}
           </nav>
-          <Link href="/demo" className="btn-pill btn-pill-primary">
-            Run demo
-          </Link>
-        </div>
-        {/* Mobile nav — no hamburger/overlay yet, just wraps under the bar. */}
-        <nav className="flex items-center gap-1 overflow-x-auto px-5 pb-3 text-sm md:hidden">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="shrink-0 rounded-full px-3 py-1.5 text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </header>
-    </div>
+        </header>
+      </div>
+      <div style={{ height: spacerHeight }} aria-hidden />
+    </>
   );
 }
