@@ -1,0 +1,122 @@
+"use client";
+
+import { useState } from "react";
+import { AlertTriangle } from "lucide-react";
+import { SCENARIOS } from "@/lib/fixtures/scenarios";
+import { OutcomeBadge } from "@/components/outcome-badge";
+import { ScenarioSelector } from "@/components/scenario-selector";
+import { InvoiceDocument } from "@/components/invoice-document";
+import { ExtractedDataPanel } from "@/components/extracted-data-panel";
+import { MatchEvidencePanel } from "@/components/match-evidence-panel";
+import { ControlChecklist } from "@/components/control-checklist";
+import { ProposedActionPanel } from "@/components/proposed-action-panel";
+import { AuditTrail } from "@/components/audit-trail";
+
+export function Workbench({ initialScenarioId }: { initialScenarioId?: string }) {
+  const initial =
+    (initialScenarioId && SCENARIOS.find((s) => s.id === initialScenarioId)?.id) ??
+    SCENARIOS[0].id;
+  const [activeId, setActiveId] = useState(initial);
+  const [selectedText, setSelectedText] = useState<string | null>(null);
+
+  const scenario = SCENARIOS.find((s) => s.id === activeId) ?? SCENARIOS[0];
+  const flaggedLineIds = scenario.documentLines
+    .filter((l) => l.kind === "notes" && scenario.extracted.notes)
+    .map((l) => l.id);
+  const isInjectionScenario = scenario.id === "prompt-injection";
+
+  function handleSelectScenario(id: string) {
+    setActiveId(id);
+    setSelectedText(null);
+  }
+
+  return (
+    <div className="mx-auto max-w-6xl px-5 pb-24 pt-8 sm:px-8">
+      <div className="mb-6">
+        <h1 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
+          AP workbench
+        </h1>
+        <p className="mt-1 max-w-2xl text-sm text-ink-muted">
+          Pick a scenario. Every field below is either read off the document
+          or computed by deterministic code — click a field to see where it
+          came from.
+        </p>
+      </div>
+
+      <ScenarioSelector
+        scenarios={SCENARIOS}
+        activeId={activeId}
+        onSelect={handleSelectScenario}
+      />
+
+      {isInjectionScenario && (
+        <div className="mt-4 flex items-start gap-2.5 rounded border border-exception/40 bg-[var(--exception-bg)] px-4 py-3">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-exception" aria-hidden />
+          <p className="text-sm text-ink">
+            This invoice contains text written to manipulate an AI reader —
+            look for the highlighted notes line in the document, and the
+            flagged control at the bottom of the checklist.
+          </p>
+        </div>
+      )}
+
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-y border-rule py-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="font-display text-lg font-semibold text-ink">
+              {scenario.title}
+            </h2>
+            <OutcomeBadge outcome={scenario.outcome} />
+          </div>
+          <p className="mt-1 text-sm text-ink-muted">{scenario.tagline}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 rounded border border-rule bg-paper-raised/50 p-4 sm:grid-cols-2 sm:p-5">
+        <div>
+          <h3 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">
+            What happened
+          </h3>
+          <p className="mt-1 text-sm leading-relaxed text-ink">
+            {scenario.narrative.whatHappened}
+          </p>
+        </div>
+        <div>
+          <h3 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">
+            Why it matters
+          </h3>
+          <p className="mt-1 text-sm leading-relaxed text-ink">
+            {scenario.narrative.whyItMatters}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <InvoiceDocument
+          lines={scenario.documentLines}
+          highlightText={selectedText}
+          flaggedLineIds={flaggedLineIds}
+        />
+        <ExtractedDataPanel
+          extracted={scenario.extracted}
+          selectedText={selectedText}
+          onSelect={setSelectedText}
+        />
+        <MatchEvidencePanel scenario={scenario} />
+        <div className="card-paper p-5 sm:p-6">
+          <div className="mb-1 border-b border-rule-strong pb-2">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">
+              Control results ({scenario.controls.length})
+            </span>
+          </div>
+          <ControlChecklist controls={scenario.controls} />
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <ProposedActionPanel scenario={scenario} />
+        <AuditTrail events={scenario.auditEvents} />
+      </div>
+    </div>
+  );
+}

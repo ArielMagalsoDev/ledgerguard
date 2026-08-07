@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+/*
+  LedgerGuard design system — "paper ledger" aesthetic.
+  Deliberately light-only, like a physical ledger book: ivory paper, hairline
+  rules, tabular-numeral mono for every money figure. Distinct from Meridian
+  Assist (warm paper / Salix blues) and SignalDesk (Agenio gray / neon lime).
+*/
+
+:root {
+  --paper: #f7f2e7;
+  --paper-raised: #fffdf6;
+  --ink: #211c12;
+  --ink-muted: #6b6152;
+  --ink-faint: #948a78;
+  --rule: rgba(33, 28, 18, 0.14);
+  --rule-strong: rgba(33, 28, 18, 0.28);
+
+  /* Outcome semantics — map 1:1 to DecisionOutcome */
+  --ready: #1b4d3e;
+  --ready-bg: #e7efe7;
+  --exception: #8a5a0b;
+  --exception-bg: #f5ecd9;
+  --duplicate: #3b4a5a;
+  --duplicate-bg: #e6eaee;
+  --blocked: #6b1e23;
+  --blocked-bg: #f3e3e2;
+
+  --accent: var(--ready);
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-raised: var(--paper-raised);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-ready: var(--ready);
+  --color-ready-bg: var(--ready-bg);
+  --color-exception: var(--exception);
+  --color-exception-bg: var(--exception-bg);
+  --color-duplicate: var(--duplicate);
+  --color-duplicate-bg: var(--duplicate-bg);
+  --color-blocked: var(--blocked);
+  --color-blocked-bg: var(--blocked-bg);
+  --font-display: var(--font-source-serif), Georgia, serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.ruled {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 27px,
+    var(--rule) 27px,
+    var(--rule) 28px
+  );
+}
+
+.card-paper {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--ready);
+  color: var(--paper-raised);
+}

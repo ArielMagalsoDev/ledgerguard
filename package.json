@@ -1,0 +1,38 @@
+{
+  "name": "ledgerguard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "generate-pdfs": "tsx --env-file=.env.local scripts/generate-invoice-pdfs.ts",
+    "run-demo-pipeline": "tsx --env-file=.env.local scripts/run-demo-pipeline.ts",
+    "test-guardrails": "tsx scripts/test-extraction-guardrails.ts",
+    "test-matching": "tsx --env-file=.env.local scripts/test-matching-guardrails.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
+    "@supabase/supabase-js": "^2.112.2",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.29.0",
+    "next": "16.3.0",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.2.108",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.0",
+    "tailwindcss": "^4",
+    "tsx": "^4.23.10",
+    "typescript": "^5"
+  }
+}
