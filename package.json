@@ -11,7 +11,8 @@
     "run-demo-pipeline": "tsx --env-file=.env.local scripts/run-demo-pipeline.ts",
     "test-guardrails": "tsx scripts/test-extraction-guardrails.ts",
     "test-matching": "tsx --env-file=.env.local scripts/test-matching-guardrails.ts",
-    "test-accounting": "tsx --env-file=.env.local scripts/test-accounting.ts"
+    "test-accounting": "tsx --env-file=.env.local scripts/test-accounting.ts",
+    "run-evals": "tsx --env-file=.env.local evals/run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",

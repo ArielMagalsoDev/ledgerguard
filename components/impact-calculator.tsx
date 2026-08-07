@@ -58,12 +58,18 @@ export function ImpactCalculator() {
     const grossLaborSavings = hoursReturned * apCostPerHour;
     const automationCost = invoicesPerMonth * automationCostPerInvoice;
     const netMonthlySavings = grossLaborSavings - automationCost;
+    // Blended cost per invoice: automation runs on every invoice, plus the
+    // remaining manual labor for whatever isn't straight-through eligible.
+    const remainingManualHours = ((invoicesPerMonth - eligibleInvoices) * minutesPerInvoice) / 60;
+    const totalMonthlyCost = automationCost + remainingManualHours * apCostPerHour;
+    const costPerInvoice = totalMonthlyCost / invoicesPerMonth;
     return {
       eligibleInvoices,
       hoursReturned,
       exceptionCount,
       netMonthlySavings,
       automationCost,
+      costPerInvoice,
     };
   }, [invoicesPerMonth, minutesPerInvoice, straightThroughPct, apCostPerHour, automationCostPerInvoice]);
 
@@ -147,6 +153,8 @@ export function ImpactCalculator() {
             <dd className="text-right font-tabular text-ink">25% ({outputs.exceptionCount.toLocaleString()}/mo)</dd>
             <dt className="text-ink-faint">Automation cost</dt>
             <dd className="text-right font-tabular text-ink">{fmtMoney(outputs.automationCost)}/mo</dd>
+            <dt className="text-ink-faint">Blended cost per invoice</dt>
+            <dd className="text-right font-tabular text-ink">${outputs.costPerInvoice.toFixed(2)}</dd>
             <dt className="text-ink-faint">First-pass preparation time</dt>
             <dd className="text-right font-tabular text-ink">minutes → under 30s</dd>
           </dl>

@@ -307,6 +307,39 @@ export type Database = {
           },
         ]
       }
+      eval_runs: {
+        Row: {
+          created_at: string
+          id: string
+          metrics: Json
+          passed_cases: number
+          per_case: Json
+          policy_version: string
+          run_label: string
+          total_cases: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metrics: Json
+          passed_cases: number
+          per_case: Json
+          policy_version: string
+          run_label: string
+          total_cases: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metrics?: Json
+          passed_cases?: number
+          per_case?: Json
+          policy_version?: string
+          run_label?: string
+          total_cases?: number
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           created_at: string

@@ -62,6 +62,11 @@ export async function getQueueItems(): Promise<QueueItem[]> {
        purchase_orders ( property_code, properties ( name ) ),
        decisions!inner ( outcome, reason, approval_route, required_actions )`
     )
+    // sub_eval_* rows are eval-harness artifacts (evals/run.ts) — real
+    // decided invoices, but not operationally-relevant queue items. Keeping
+    // them out of the public queue is the same call already made for the
+    // 24 seeded historical rows (which never get a decisions row at all).
+    .not("submission_id", "like", "sub_eval_%")
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(`getQueueItems: failed to load invoices — ${error.message}`);
