@@ -12,6 +12,7 @@
 
 :root {
   --paper: #dcdcdc;
+  --paper-light: #f0f0f0;
   --paper-raised: #ffffff;
   --ink: #131313;
   --ink-muted: #5c5c5c;
@@ -46,6 +47,7 @@
 
 @theme inline {
   --color-paper: var(--paper);
+  --color-paper-light: var(--paper-light);
   --color-paper-raised: var(--paper-raised);
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);

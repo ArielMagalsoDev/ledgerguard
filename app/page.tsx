@@ -74,25 +74,28 @@ const TRILOGY = [
 export default function Home() {
   return (
     <div>
-      {/* Hero */}
-      <section className="mx-auto max-w-6xl px-5 pb-16 pt-16 text-center sm:px-8 sm:pt-24">
-        <p className="section-marker">(AI invoice-exception automation)</p>
-        <h1 className="mx-auto mt-5 max-w-4xl font-display text-5xl font-normal leading-[1.05] text-ink sm:text-6xl lg:text-7xl">
-          Prepare invoices without <span className="text-accent">guessing</span> at financial data.
-        </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">
-          LedgerSentry extracts invoice data with visible evidence, recalculates every amount with deterministic
-          code, matches suppliers and purchase orders, and routes exceptions to the right approver — never to a
-          model&rsquo;s best guess. It never authorizes a payment on its own.
-        </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link href="/demo" className="btn-pill btn-pill-primary">
-            Run the guided AP workflow
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
-          <Link href="/evals" className="btn-pill btn-pill-outline">
-            View control evaluations
-          </Link>
+      {/* Hero — sits on the lighter paper panel with the header, same
+          light/base two-tone grouping as agero.framer.website. */}
+      <section className="bg-paper-light px-5 pb-16 pt-16 text-center sm:px-8 sm:pt-24">
+        <div className="mx-auto max-w-6xl">
+          <p className="section-marker">(AI invoice-exception automation)</p>
+          <h1 className="mx-auto mt-5 max-w-4xl font-display text-5xl font-normal leading-[1.05] text-ink sm:text-6xl lg:text-7xl">
+            Prepare invoices without <span className="text-accent">guessing</span> at financial data.
+          </h1>
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">
+            LedgerSentry extracts invoice data with visible evidence, recalculates every amount with deterministic
+            code, matches suppliers and purchase orders, and routes exceptions to the right approver — never to a
+            model&rsquo;s best guess. It never authorizes a payment on its own.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link href="/demo" className="btn-pill btn-pill-primary">
+              Run the guided AP workflow
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+            <Link href="/evals" className="btn-pill btn-pill-outline">
+              View control evaluations
+            </Link>
+          </div>
         </div>
       </section>
 

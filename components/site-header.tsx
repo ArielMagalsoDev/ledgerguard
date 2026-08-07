@@ -18,7 +18,7 @@ const CHIP_PATH =
 
 export function SiteHeader() {
   return (
-    <div className="sticky top-0 z-40 bg-paper">
+    <div className="sticky top-0 z-40 bg-paper-light">
       <header className="relative">
         <div className="flex justify-center">
           <div className="status-chip-shape">
