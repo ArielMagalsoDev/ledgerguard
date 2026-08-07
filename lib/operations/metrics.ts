@@ -37,6 +37,17 @@ export type OperationsSnapshot = {
 export async function getOperationsSnapshot(): Promise<OperationsSnapshot> {
   const db: Db = supabaseAdmin();
 
+  // Upload-sandbox rows (source='upload') are visitor-submitted, expire in
+  // 30 minutes, and are never operationally relevant to Keystone's own
+  // pipeline — excluded from every aggregate below, the same call already
+  // made for the eval-harness sub_eval_* rows in lib/queue/queue-items.ts.
+  // audit_events/controls/match_results/jobs don't carry `source`
+  // themselves, so their upload rows are filtered in JS against this id set
+  // rather than duplicating the column everywhere.
+  const { data: uploadIdRows } = await db.from("invoices").select("id").eq("source", "upload");
+  const uploadIds = new Set((uploadIdRows ?? []).map((r) => r.id));
+  const notUpload = (invoiceId: string | null) => invoiceId == null || !uploadIds.has(invoiceId);
+
   const [
     { count: totalInvoices },
     { data: statusRows },
@@ -48,17 +59,18 @@ export async function getOperationsSnapshot(): Promise<OperationsSnapshot> {
     { data: jobRows },
     { data: acctRows },
   ] = await Promise.all([
-    db.from("invoices").select("id", { count: "exact", head: true }),
-    db.from("invoices").select("status"),
+    db.from("invoices").select("id", { count: "exact", head: true }).neq("source", "upload"),
+    db.from("invoices").select("status").neq("source", "upload"),
     db.from("audit_events").select("invoice_id, workflow_id, stage, latency_ms, cost_usd"),
     db
       .from("invoices")
       .select("id, workflow_id, invoice_number, created_at, decisions!inner(outcome)")
+      .neq("source", "upload")
       .order("created_at", { ascending: false }),
-    db.from("controls").select("control_id, label").in("status", ["failed", "warning"]),
-    db.from("match_results").select("duplicate_candidates"),
+    db.from("controls").select("invoice_id, control_id, label").in("status", ["failed", "warning"]),
+    db.from("match_results").select("invoice_id, duplicate_candidates"),
     db.from("audit_events").select("invoice_id").eq("stage", "field_corrected"),
-    db.from("jobs").select("status"),
+    db.from("jobs").select("invoice_id, status"),
     db.from("accounting_bills").select("status"),
   ]);
 
@@ -67,12 +79,13 @@ export async function getOperationsSnapshot(): Promise<OperationsSnapshot> {
     statusCounts.set(row.status, (statusCounts.get(row.status) ?? 0) + 1);
   }
 
-  const totalAuditEvents = (auditRows ?? []).length;
-  const totalLatencyMs = (auditRows ?? []).reduce((sum, e) => sum + (e.latency_ms ?? 0), 0);
-  const totalCostUsd = (auditRows ?? []).reduce((sum, e) => sum + (e.cost_usd ?? 0), 0);
+  const scopedAuditRows = (auditRows ?? []).filter((e) => notUpload(e.invoice_id));
+  const totalAuditEvents = scopedAuditRows.length;
+  const totalLatencyMs = scopedAuditRows.reduce((sum, e) => sum + (e.latency_ms ?? 0), 0);
+  const totalCostUsd = scopedAuditRows.reduce((sum, e) => sum + (e.cost_usd ?? 0), 0);
 
   const byInvoice = new Map<string, { events: number; latencyMs: number; costUsd: number }>();
-  for (const e of auditRows ?? []) {
+  for (const e of scopedAuditRows) {
     if (!e.invoice_id) continue;
     const agg = byInvoice.get(e.invoice_id) ?? { events: 0, latencyMs: 0, costUsd: 0 };
     agg.events += 1;
@@ -98,7 +111,7 @@ export async function getOperationsSnapshot(): Promise<OperationsSnapshot> {
   });
 
   const controlCounts = new Map<string, { label: string; count: number }>();
-  for (const c of controlFailRows ?? []) {
+  for (const c of (controlFailRows ?? []).filter((c) => notUpload(c.invoice_id))) {
     const existing = controlCounts.get(c.control_id);
     if (existing) existing.count += 1;
     else controlCounts.set(c.control_id, { label: c.label, count: 1 });
@@ -108,15 +121,18 @@ export async function getOperationsSnapshot(): Promise<OperationsSnapshot> {
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
 
-  const duplicateCandidatesFound = (matchRows ?? []).filter((m) => Array.isArray(m.duplicate_candidates) && (m.duplicate_candidates as unknown[]).length > 0).length;
+  const duplicateCandidatesFound = (matchRows ?? [])
+    .filter((m) => notUpload(m.invoice_id))
+    .filter((m) => Array.isArray(m.duplicate_candidates) && (m.duplicate_candidates as unknown[]).length > 0).length;
   const duplicateHoldsConfirmed = decided.filter((r) => r.decisions?.outcome === "duplicate_hold").length;
 
   const correctedInvoiceIds = new Set((correctedRows ?? []).map((r) => r.invoice_id).filter(Boolean));
   const humanCorrectionRate = decided.length > 0 ? correctedInvoiceIds.size / decided.length : 0;
 
+  const scopedJobRows = (jobRows ?? []).filter((j) => notUpload(j.invoice_id));
   const jobFailures = {
-    transient: (jobRows ?? []).filter((j) => j.status === "failed_transient").length,
-    permanent: (jobRows ?? []).filter((j) => j.status === "failed_permanent").length,
+    transient: scopedJobRows.filter((j) => j.status === "failed_transient").length,
+    permanent: scopedJobRows.filter((j) => j.status === "failed_permanent").length,
   };
 
   const accountingFailures = (acctRows ?? []).filter((a) => a.status === "failed").length;

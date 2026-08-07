@@ -81,6 +81,22 @@ function composeReason(
  * matching → instruction screening → outcome + routing + required actions.
  * Arithmetic controls are Phase 3's job and passed in, not recomputed here.
  */
+export type DecideOptions = {
+  // Upload sandbox only (ledgerguard.md "Critical correction 2"). The
+  // shipped engine blocks on an unmatched supplier — correct for Keystone's
+  // own intake, where that's a fraud signal, but wrong for a public sandbox
+  // where an arbitrary invoice not being in the fictional supplier master
+  // is the expected, common case. Under upload mode: an unmatched supplier
+  // becomes a non-blocking exception instead of an instant block, duplicate
+  // detection is scoped away from other visitors' uploads, and the outcome
+  // can never reach ready_for_approval — enforced here, not just expected
+  // from the checks happening to fail, so a visitor re-uploading a seeded
+  // scenario's exact PDF (which *would* legitimately match supplier + PO)
+  // still can't walk away with a "the AI approved my invoice" screenshot.
+  uploadMode?: boolean;
+  uploadSessionToken?: string;
+};
+
 export async function decideInvoice(
   db: ReturnType<typeof supabaseAdmin>,
   invoiceId: string,
@@ -90,11 +106,19 @@ export async function decideInvoice(
   requiresReview: boolean,
   problemFields: string[],
   policyVersion: string,
-  policy: PolicyConfig
+  policy: PolicyConfig,
+  options: DecideOptions = {}
 ): Promise<DecisionResult> {
+  const { uploadMode = false, uploadSessionToken } = options;
   const supplierResult = await resolveSupplier(db, extracted);
   const bankControl = compareBankDetails(extracted, supplierResult.supplier);
-  const duplicateResult = await checkDuplicate(db, extracted, supplierResult.supplierId, invoiceId);
+  const duplicateResult = await checkDuplicate(
+    db,
+    extracted,
+    supplierResult.supplierId,
+    invoiceId,
+    uploadMode ? uploadSessionToken : undefined
+  );
   const instructionControl = screenInstructions(extracted);
 
   const totalUsd = extracted.total.value ? Number(extracted.total.value) : 0;
@@ -155,8 +179,12 @@ export async function decideInvoice(
     };
   }
 
-  // Completely unknown supplier is a hard stop — new suppliers are never created automatically.
-  if (supplierResult.tier === "none") {
+  // Completely unknown supplier is a hard stop for real intake — new
+  // suppliers are never created automatically. In upload mode this is the
+  // expected common case for an arbitrary document, so it falls through to
+  // the general path below instead, where it becomes a non-blocking
+  // exception rather than an instant block.
+  if (supplierResult.tier === "none" && !uploadMode) {
     const controls = [...arithmeticControls, supplierResult.control, bankControl, duplicateResult.control, instructionControl];
     const outcome: DecisionOutcome = "blocked";
     const match: InvoiceMatchResult = {
@@ -183,12 +211,24 @@ export async function decideInvoice(
     };
   }
 
+  const supplierControlForOutcome: ControlResult =
+    uploadMode && supplierResult.tier === "none"
+      ? {
+          ...supplierResult.control,
+          reason:
+            "No approved supplier matches this invoice's tax ID or name — expected for an uploaded document, since Ledger Guard's public demo only recognizes its fictional supplier master. New suppliers are never created automatically, so this stays an exception rather than a match.",
+        }
+      : supplierResult.control;
+
   // Otherwise, run PO/receipt matching and evaluate everything together.
+  // supplierId is null here whenever tier is "none" (upload mode only) —
+  // matchPurchaseOrder skips the supplier cross-check in that case, still
+  // doing a real PO-number lookup.
   const poResult = await matchPurchaseOrder(db, extracted, supplierResult.supplierId, policy);
 
   const allControls = [
     ...arithmeticControls,
-    supplierResult.control,
+    supplierControlForOutcome,
     bankControl,
     duplicateResult.control,
     ...poResult.controls,
@@ -196,7 +236,11 @@ export async function decideInvoice(
   ];
 
   const blockingIssues = allControls.filter((c) => c.blocking && (c.status === "failed" || c.status === "warning"));
-  const outcome: DecisionOutcome = requiresReview || blockingIssues.length > 0 ? "exception_review" : "ready_for_approval";
+  const naturalOutcome: DecisionOutcome = requiresReview || blockingIssues.length > 0 ? "exception_review" : "ready_for_approval";
+  // Upload-mode ceiling: never ready_for_approval, even for an invoice that
+  // legitimately clears every check (e.g. a re-uploaded seeded scenario's
+  // exact PDF, which would otherwise match supplier and PO for real).
+  const outcome: DecisionOutcome = uploadMode && naturalOutcome === "ready_for_approval" ? "exception_review" : naturalOutcome;
 
   const match: InvoiceMatchResult = {
     supplierId: supplierResult.supplierId ?? undefined,
@@ -234,17 +278,25 @@ export async function decideInvoice(
     };
   }
 
+  const wasCeilinged = uploadMode && naturalOutcome === "ready_for_approval" && outcome === "exception_review";
+  const reason = wasCeilinged
+    ? "Every check passed — supplier identity, arithmetic, PO match, duplicate and bank-detail checks all agree. Ledger Guard's upload sandbox never auto-approves an uploaded document, though: routed for human review instead of ready_for_approval."
+    : composeReason(outcome, blockingIssues, null, null);
+  const requiredActions = wasCeilinged
+    ? ["Confirm this result manually — the upload sandbox caps every uploaded document below ready_for_approval regardless of how clean the checks come back."]
+    : requiredActionsFor(outcome, blockingIssues, requiresReview, problemFields);
+
   return {
     match,
     newControls: allControls,
     decision: {
       workflowId,
       outcome,
-      reason: composeReason(outcome, blockingIssues, null, null),
+      reason,
       controls: allControls,
       approvalRoute: computeApprovalRoute(outcome, totalUsd, policy),
       proposedAccountingChange,
-      requiredActions: requiredActionsFor(outcome, blockingIssues, requiresReview, problemFields),
+      requiredActions,
       policyVersion,
     },
   };

@@ -17,7 +17,13 @@ export async function checkDuplicate(
   db: ReturnType<typeof supabaseAdmin>,
   extracted: ExtractedInvoice,
   supplierId: string | null,
-  currentInvoiceId: string
+  currentInvoiceId: string,
+  // Upload sandbox only: scopes the exact-match query to real/seeded rows
+  // plus this same session's own prior uploads — never another visitor's
+  // upload (ledgerguard.md's data-boundaries requirement). Undefined for
+  // every non-upload caller, which keeps the query unscoped exactly as
+  // before.
+  uploadScopeSessionToken?: string
 ): Promise<DuplicateCheckResult> {
   const invoiceNumber = extracted.invoiceNumber;
   const invoiceDate = extracted.invoiceDate;
@@ -47,16 +53,20 @@ export async function checkDuplicate(
     };
   }
 
-  const { data: exactMatches } = await db
+  let query = db
     .from("invoices")
     .select("id, submission_id, original_file_name, created_at")
     .eq("supplier_id", supplierId)
     .eq("invoice_number_normalized", invoiceNumber.normalizedValue)
     .eq("invoice_date", invoiceDate.value)
     .eq("total", Number(total.value))
-    .neq("id", currentInvoiceId)
-    .order("created_at", { ascending: true })
-    .limit(5);
+    .neq("id", currentInvoiceId);
+
+  if (uploadScopeSessionToken) {
+    query = query.or(`source.neq.upload,session_token.eq.${uploadScopeSessionToken}`);
+  }
+
+  const { data: exactMatches } = await query.order("created_at", { ascending: true }).limit(5);
 
   if (exactMatches && exactMatches.length > 0) {
     const first = exactMatches[0];

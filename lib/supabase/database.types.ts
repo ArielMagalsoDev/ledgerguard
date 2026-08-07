@@ -1,5 +1,3 @@
-// Generated from the live schema via the Supabase MCP `generate_typescript_types`
-// tool. Regenerate after any migration — do not hand-edit.
 export type Json =
   | string
   | number
@@ -345,6 +343,7 @@ export type Database = {
           created_at: string
           currency: string | null
           due_date: string | null
+          expires_at: string | null
           extracted: Json
           file_hash: string
           id: string
@@ -358,6 +357,7 @@ export type Database = {
           received_at: string
           scenario_key: string | null
           sender_email: string | null
+          session_token: string | null
           source: string
           status: string
           storage_path: string | null
@@ -373,6 +373,7 @@ export type Database = {
           created_at?: string
           currency?: string | null
           due_date?: string | null
+          expires_at?: string | null
           extracted?: Json
           file_hash: string
           id?: string
@@ -386,6 +387,7 @@ export type Database = {
           received_at: string
           scenario_key?: string | null
           sender_email?: string | null
+          session_token?: string | null
           source: string
           status?: string
           storage_path?: string | null
@@ -401,6 +403,7 @@ export type Database = {
           created_at?: string
           currency?: string | null
           due_date?: string | null
+          expires_at?: string | null
           extracted?: Json
           file_hash?: string
           id?: string
@@ -414,6 +417,7 @@ export type Database = {
           received_at?: string
           scenario_key?: string | null
           sender_email?: string | null
+          session_token?: string | null
           source?: string
           status?: string
           storage_path?: string | null
@@ -876,11 +880,45 @@ export type Database = {
         }
         Relationships: []
       }
+      upload_deletions: {
+        Row: {
+          deleted_at: string
+          id: string
+          invoice_id: string
+          note: string | null
+          storage_deleted: boolean
+          storage_path: string | null
+        }
+        Insert: {
+          deleted_at?: string
+          id?: string
+          invoice_id: string
+          note?: string | null
+          storage_deleted?: boolean
+          storage_path?: string | null
+        }
+        Update: {
+          deleted_at?: string
+          id?: string
+          invoice_id?: string
+          note?: string | null
+          storage_deleted?: boolean
+          storage_path?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: { p_client_key: string; p_max: number; p_window_seconds: number }
+        Returns: {
+          allowed: boolean
+          count_in_window: number
+        }[]
+      }
       claim_next_job: {
         Args: { p_job_type: string }
         Returns: {
@@ -896,6 +934,12 @@ export type Database = {
           status: string
           updated_at: string
         }[]
+        SetofOptions: {
+          from: "*"
+          to: "jobs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       refund_spend: {
         Args: { p_amount: number; p_day: string }

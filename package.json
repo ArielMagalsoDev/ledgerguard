@@ -12,6 +12,7 @@
     "test-guardrails": "tsx scripts/test-extraction-guardrails.ts",
     "test-matching": "tsx --env-file=.env.local scripts/test-matching-guardrails.ts",
     "test-accounting": "tsx --env-file=.env.local scripts/test-accounting.ts",
+    "test-upload-sandbox": "tsx --env-file=.env.local scripts/test-upload-sandbox.ts",
     "run-evals": "tsx --env-file=.env.local evals/run.ts"
   },
   "dependencies": {

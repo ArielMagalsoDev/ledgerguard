@@ -66,7 +66,11 @@ export async function getQueueItems(): Promise<QueueItem[]> {
     // decided invoices, but not operationally-relevant queue items. Keeping
     // them out of the public queue is the same call already made for the
     // 24 seeded historical rows (which never get a decisions row at all).
+    // source='upload' rows (the bring-your-own-invoice sandbox) get real
+    // decisions too but are visitor-submitted, session-scoped, and expire
+    // in 30 minutes — never operationally relevant to Keystone's own queue.
     .not("submission_id", "like", "sub_eval_%")
+    .neq("source", "upload")
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(`getQueueItems: failed to load invoices — ${error.message}`);

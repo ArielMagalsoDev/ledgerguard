@@ -138,7 +138,15 @@ export async function processNextInvoiceJob(): Promise<ProcessJobResult> {
       .limit(1)
       .maybeSingle();
 
-    const policyVersion = policyRow?.version ?? "policy_2026.3";
+    const basePolicyVersion = policyRow?.version ?? "policy_2026.3";
+    // Upload sandbox: source === "upload" runs under the upload-mode policy
+    // (ledgerguard.md "Critical correction 2") — an unmatched supplier
+    // becomes a non-blocking exception instead of an instant block, and the
+    // outcome can never reach ready_for_approval. Every other source
+    // (demo_scenario, email, shared_folder, and real historical seed rows)
+    // is unaffected — decideInvoice defaults uploadMode to false.
+    const isUpload = invoice.source === "upload";
+    const policyVersion = isUpload ? `${basePolicyVersion}+upload-sandbox-v1` : basePolicyVersion;
     const config = (policyRow?.config ?? {}) as { taxRoundingToleranceUsd?: number };
     const taxRoundingToleranceUsd = config.taxRoundingToleranceUsd ?? 0.02;
 
@@ -253,7 +261,8 @@ export async function processNextInvoiceJob(): Promise<ProcessJobResult> {
       result.requiresReview,
       result.problemFields,
       policyVersion,
-      policyConfig
+      policyConfig,
+      isUpload ? { uploadMode: true, uploadSessionToken: invoice.session_token ?? undefined } : undefined
     );
 
     for (const control of decisionResult.newControls) {

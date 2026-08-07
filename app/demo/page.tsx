@@ -19,5 +19,12 @@ export default async function DemoPage({
 }) {
   const params = await searchParams;
   const scenarios = await getAllLiveScenarios();
-  return <Workbench scenarios={scenarios} initialScenarioId={params.scenario} />;
+  const uploadSandboxEnabled = process.env.UPLOAD_SANDBOX_ENABLED === "true";
+  return (
+    <Workbench
+      scenarios={scenarios}
+      initialScenarioId={params.scenario}
+      uploadSandboxEnabled={uploadSandboxEnabled}
+    />
+  );
 }

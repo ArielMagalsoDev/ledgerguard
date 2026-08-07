@@ -32,7 +32,7 @@ import type {
 
 type Db = ReturnType<typeof supabaseAdmin>;
 
-function mapControl(row: {
+export function mapControl(row: {
   control_id: string;
   label: string;
   status: string;
@@ -52,7 +52,7 @@ function mapControl(row: {
   };
 }
 
-function mapAuditEvent(row: {
+export function mapAuditEvent(row: {
   id: string;
   timestamp: string;
   stage: string;
@@ -74,7 +74,7 @@ function mapAuditEvent(row: {
   };
 }
 
-function mapSupplier(row: {
+export function mapSupplier(row: {
   id: string;
   name: string;
   tax_id: string;
@@ -100,7 +100,7 @@ function mapSupplier(row: {
   };
 }
 
-function mapPurchaseOrder(
+export function mapPurchaseOrder(
   row: { id: string; po_number: string; supplier_id: string; property_code: string; currency: string; status: string; issued_date: string; not_to_exceed: number },
   lines: Array<{ sku: string | null; description: string; approved_quantity: number; unit_price: number }>
 ): PurchaseOrderRecord {
@@ -122,7 +122,7 @@ function mapPurchaseOrder(
   };
 }
 
-function mapReceipt(
+export function mapReceipt(
   row: { id: string; purchase_order_id: string; received_date: string; received_by: string },
   lines: Array<{ sku: string | null; description: string; quantity_received: number }>
 ): ReceiptRecord {
@@ -135,7 +135,7 @@ function mapReceipt(
   };
 }
 
-function mapExistingInvoice(row: {
+export function mapExistingInvoice(row: {
   id: string;
   supplier_id: string | null;
   invoice_number: string | null;
@@ -155,7 +155,7 @@ function mapExistingInvoice(row: {
   };
 }
 
-async function fetchPurchaseOrder(db: Db, purchaseOrderId: string): Promise<PurchaseOrderRecord | undefined> {
+export async function fetchPurchaseOrder(db: Db, purchaseOrderId: string): Promise<PurchaseOrderRecord | undefined> {
   const [{ data: po }, { data: lines }] = await Promise.all([
     db.from("purchase_orders").select("*").eq("id", purchaseOrderId).maybeSingle(),
     db.from("po_lines").select("*").eq("purchase_order_id", purchaseOrderId).order("line_number"),
@@ -164,7 +164,7 @@ async function fetchPurchaseOrder(db: Db, purchaseOrderId: string): Promise<Purc
   return mapPurchaseOrder(po, lines ?? []);
 }
 
-async function fetchReceipt(db: Db, receiptId: string): Promise<ReceiptRecord | undefined> {
+export async function fetchReceipt(db: Db, receiptId: string): Promise<ReceiptRecord | undefined> {
   const [{ data: receipt }, { data: lines }] = await Promise.all([
     db.from("receipts").select("*").eq("id", receiptId).maybeSingle(),
     db.from("receipt_lines").select("*").eq("receipt_id", receiptId),

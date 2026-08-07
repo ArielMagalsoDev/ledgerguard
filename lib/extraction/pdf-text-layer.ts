@@ -1,21 +1,10 @@
-import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { loadPdfjs, STANDARD_FONT_DATA_URL } from "@/lib/extraction/pdfjs-runtime";
 
 export type TextLayerLine = {
   page: number; // 1-based
   text: string;
   box: [number, number, number, number]; // [x0,y0,x1,y1], normalized 0-1, top-left origin
 };
-
-// pdfjs falls back to its bundled standard (non-embedded) fonts when a PDF
-// references a font it doesn't embed. Our PDFs (pdf-generate.ts) always
-// embed their own fonts, so this path is never actually exercised — but
-// without pointing pdfjs at the fonts it ships in its own package, it prints
-// a `standardFontDataUrl` warning to stderr on every extraction. Silenced by
-// pointing at the copy already sitting in node_modules.
-const STANDARD_FONT_DATA_URL = pathToFileURL(
-  path.join(process.cwd(), "node_modules/pdfjs-dist/standard_fonts/")
-).href;
 
 /**
  * Reads the real text layer out of a PDF — page, string, and position for
@@ -24,8 +13,15 @@ const STANDARD_FONT_DATA_URL = pathToFileURL(
  * report its own coordinates (CLAUDE.md section 10).
  */
 export async function extractTextLayer(pdfBytes: Uint8Array): Promise<TextLayerLine[]> {
-  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const loadingTask = pdfjsLib.getDocument({ data: pdfBytes, standardFontDataUrl: STANDARD_FONT_DATA_URL });
+  const pdfjsLib = await loadPdfjs();
+  // pdfjs's `data` option takes ownership of the buffer it's given and
+  // detaches it (byteLength drops to 0 on every reference to the same
+  // underlying ArrayBuffer, caller included) — pass a copy, never
+  // `pdfBytes` itself, so callers can safely reuse their own buffer
+  // afterward (the upload sandbox's validateUpload does exactly that, and
+  // this was silently unsafe for every existing caller too, just never hit
+  // because none of them happened to reuse the buffer after this call).
+  const loadingTask = pdfjsLib.getDocument({ data: pdfBytes.slice(), standardFontDataUrl: STANDARD_FONT_DATA_URL });
   const pdf = await loadingTask.promise;
 
   const lines: TextLayerLine[] = [];

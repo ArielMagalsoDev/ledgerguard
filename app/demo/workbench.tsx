@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, Radio } from "lucide-react";
+import Link from "next/link";
+import { AlertTriangle, Radio, UploadCloud } from "lucide-react";
 import type { DemoScenario } from "@/lib/types";
 import { OutcomeBadge } from "@/components/outcome-badge";
 import { ScenarioSelector } from "@/components/scenario-selector";
@@ -15,9 +16,11 @@ import { AuditTrail } from "@/components/audit-trail";
 export function Workbench({
   scenarios,
   initialScenarioId,
+  uploadSandboxEnabled = false,
 }: {
   scenarios: Array<{ scenario: DemoScenario; isLive: boolean }>;
   initialScenarioId?: string;
+  uploadSandboxEnabled?: boolean;
 }) {
   const SCENARIOS = scenarios.map((s) => s.scenario);
   const liveById = new Map(scenarios.map((s) => [s.scenario.id, s.isLive]));
@@ -53,11 +56,22 @@ export function Workbench({
         </p>
       </div>
 
-      <ScenarioSelector
-        scenarios={SCENARIOS}
-        activeId={activeId}
-        onSelect={handleSelectScenario}
-      />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <ScenarioSelector
+          scenarios={SCENARIOS}
+          activeId={activeId}
+          onSelect={handleSelectScenario}
+        />
+        {uploadSandboxEnabled && (
+          <Link
+            href="/try"
+            className="btn-pill btn-pill-outline shrink-0 items-center gap-1.5 self-start"
+          >
+            <UploadCloud className="h-3.5 w-3.5" aria-hidden />
+            Try your own invoice
+          </Link>
+        )}
+      </div>
 
       {isInjectionScenario && (
         <div className="mt-4 flex items-start gap-2.5 rounded border border-exception/40 bg-[var(--exception-bg)] px-4 py-3">
