@@ -142,20 +142,27 @@ body {
   background: rgba(255, 255, 255, 0.08);
 }
 
-/* Status chip — Agero's floating "Available for New Projects" pill. */
-.status-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  border-radius: var(--radius-pill);
-  background: var(--ink);
-  color: var(--paper-raised);
-  padding: 0.4rem 0.9rem 0.4rem 0.7rem;
-  font-size: 0.75rem;
+/* Status chip — traced from agero.framer.website's real header: a single
+   flared SVG shape flush with the very top of the page, flat and almost
+   full-width at the top edge, tapering via concave curves to a narrower
+   flat pill at the bottom where the dot + label sit. Not a bordered card
+   with a cutout — the flare *is* the shape. See CHIP_PATH in
+   components/site-header.tsx for the traced path. */
+.status-chip-shape {
+  position: relative;
+  width: min(583px, 92vw);
+  aspect-ratio: 583 / 36;
+}
+.status-chip-shape svg {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
 }
 .status-chip-dot {
   height: 6px;
   width: 6px;
+  flex-shrink: 0;
   border-radius: 999px;
   background: #22c55e;
 }
