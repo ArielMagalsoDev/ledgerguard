@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
-import { Source_Serif_4, IBM_Plex_Mono, Inter } from "next/font/google";
+import { IBM_Plex_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 
-const sourceSerif = Source_Serif_4({
-  variable: "--font-source-serif",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
+// Cal Sans (display face) is imported directly in globals.css via
+// @fontsource/cal-sans — it's self-hosted OFL type, not a Google Font, so
+// next/font/google can't load it. font-display in globals.css's @theme
+// references the family name directly instead of a --font-* CSS variable.
 
 const plexMono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
@@ -31,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${sourceSerif.variable} ${plexMono.variable} ${inter.variable} h-full`}
+      className={`${plexMono.variable} ${inter.variable} h-full`}
     >
       <body className="flex min-h-full flex-col bg-paper text-ink">
         <SiteHeader />

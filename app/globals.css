@@ -1,32 +1,47 @@
 @import "tailwindcss";
+@import "@fontsource/cal-sans/400.css";
 
 /*
-  LedgerGuard design system — "paper ledger" aesthetic.
-  Deliberately light-only, like a physical ledger book: ivory paper, hairline
-  rules, tabular-numeral mono for every money figure. Distinct from Meridian
-  Assist (warm paper / Salix blues) and SignalDesk (Agenio gray / neon lime).
+  LedgerSentry design system — restyled after agero.framer.website (2026-08-08):
+  warm-gray canvas, white raised surfaces, near-black ink, one orange accent
+  used sparingly, big Cal Sans display type, fully-rounded pill controls,
+  alternating light/dark sections. Token NAMES are unchanged from the prior
+  "paper ledger" system on purpose — every component already reads --paper,
+  --ink, --ready etc., so re-theming happens here without touching them.
 */
 
 :root {
-  --paper: #f7f2e7;
-  --paper-raised: #fffdf6;
-  --ink: #211c12;
-  --ink-muted: #6b6152;
-  --ink-faint: #948a78;
-  --rule: rgba(33, 28, 18, 0.14);
-  --rule-strong: rgba(33, 28, 18, 0.28);
+  --paper: #dcdcdc;
+  --paper-raised: #ffffff;
+  --ink: #131313;
+  --ink-muted: #5c5c5c;
+  --ink-faint: #8a8a8a;
+  --rule: rgba(19, 19, 19, 0.12);
+  --rule-strong: rgba(19, 19, 19, 0.24);
 
-  /* Outcome semantics — map 1:1 to DecisionOutcome */
-  --ready: #1b4d3e;
-  --ready-bg: #e7efe7;
-  --exception: #8a5a0b;
-  --exception-bg: #f5ecd9;
-  --duplicate: #3b4a5a;
-  --duplicate-bg: #e6eaee;
-  --blocked: #6b1e23;
-  --blocked-bg: #f3e3e2;
+  --accent: #ff4d00;
+  --accent-ink: #ffffff;
 
-  --accent: var(--ready);
+  --dark-bg: #131313;
+  --dark-surface: #1c1c1c;
+  --dark-ink: #ffffff;
+  --dark-ink-muted: rgba(255, 255, 255, 0.64);
+  --dark-rule: rgba(255, 255, 255, 0.14);
+
+  /* Outcome semantics — map 1:1 to DecisionOutcome. Exception reuses the
+     accent orange on purpose, same role Agero gives it: the one color that
+     means "look here." */
+  --ready: #1b7a4a;
+  --ready-bg: rgba(27, 122, 74, 0.12);
+  --exception: #ff4d00;
+  --exception-bg: rgba(255, 77, 0, 0.12);
+  --duplicate: #2a4b8d;
+  --duplicate-bg: rgba(42, 75, 141, 0.12);
+  --blocked: #c81e3a;
+  --blocked-bg: rgba(200, 30, 58, 0.12);
+
+  --radius-card: 20px;
+  --radius-pill: 999px;
 }
 
 @theme inline {
@@ -37,6 +52,11 @@
   --color-ink-faint: var(--ink-faint);
   --color-rule: var(--rule);
   --color-rule-strong: var(--rule-strong);
+  --color-accent: var(--accent);
+  --color-dark-bg: var(--dark-bg);
+  --color-dark-surface: var(--dark-surface);
+  --color-dark-ink: var(--dark-ink);
+  --color-dark-rule: var(--dark-rule);
   --color-ready: var(--ready);
   --color-ready-bg: var(--ready-bg);
   --color-exception: var(--exception);
@@ -45,7 +65,7 @@
   --color-duplicate-bg: var(--duplicate-bg);
   --color-blocked: var(--blocked);
   --color-blocked-bg: var(--blocked-bg);
-  --font-display: var(--font-source-serif), Georgia, serif;
+  --font-display: "Cal Sans", var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
 }
@@ -62,23 +82,106 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-.ruled {
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent,
-    transparent 27px,
-    var(--rule) 27px,
-    var(--rule) 28px
-  );
-}
-
 .card-paper {
   background: var(--paper-raised);
   border: 1px solid var(--rule);
-  border-radius: 4px;
+  border-radius: var(--radius-card);
+}
+
+/* Full-bleed dark section, Agero's alternating-section pattern. */
+.section-dark {
+  background: var(--dark-bg);
+  color: var(--dark-ink);
+}
+.section-dark .text-ink-muted {
+  color: var(--dark-ink-muted);
+}
+
+/* "(Section label)" marker — Agero's parenthetical eyebrow above a heading. */
+.section-marker {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-faint);
+}
+.section-dark .section-marker {
+  color: var(--dark-ink-muted);
+}
+
+/* Pill buttons — dark-filled primary, outlined secondary. */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-pill);
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+  white-space: nowrap;
+}
+.btn-pill-primary {
+  background: var(--ink);
+  color: var(--paper-raised);
+}
+.btn-pill-primary:hover {
+  opacity: 0.88;
+}
+.btn-pill-outline {
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+}
+.btn-pill-outline:hover {
+  background: rgba(19, 19, 19, 0.05);
+}
+.section-dark .btn-pill-outline {
+  border-color: var(--dark-rule);
+  color: var(--dark-ink);
+}
+.section-dark .btn-pill-outline:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Status chip — Agero's floating "Available for New Projects" pill. */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--paper-raised);
+  padding: 0.4rem 0.9rem 0.4rem 0.7rem;
+  font-size: 0.75rem;
+}
+.status-chip-dot {
+  height: 6px;
+  width: 6px;
+  border-radius: 999px;
+  background: #22c55e;
+}
+
+/* Infinite marquee ticker. Content is duplicated once in markup for a
+   seamless loop; this only animates the outer track by -50%. */
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 28s linear infinite;
+}
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
 }
 
 ::selection {
-  background: var(--ready);
-  color: var(--paper-raised);
+  background: var(--accent);
+  color: var(--accent-ink);
 }
