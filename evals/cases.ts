@@ -6,33 +6,10 @@
 // pipeline (evals/run.ts) are what actually needs to be right, and are
 // exercised for real against whatever is in this file.
 import { SCENARIOS } from "@/lib/fixtures/scenarios";
-import type { DecisionOutcome, InvoiceDocumentLine, MatchTier, PoMatchTier } from "@/lib/types";
+import type { InvoiceDocumentLine } from "@/lib/types";
+import type { EvalCase, EvalCategory } from "@/evals/types";
 
-export type EvalCategory =
-  | "clean_match"
-  | "price_quantity_exception"
-  | "arithmetic_tax_failure"
-  | "duplicate"
-  | "supplier_bank_detail"
-  | "ambiguous_scan"
-  | "adversarial_injection";
-
-export type EvalCase = {
-  id: string;
-  category: EvalCategory;
-  title: string;
-  documentLines: InvoiceDocumentLine[];
-  expected: {
-    outcome: DecisionOutcome;
-    invoiceNumber?: string;
-    total?: string;
-    supplierMatch?: MatchTier;
-    purchaseOrderMatch?: PoMatchTier;
-    requiresReview?: boolean;
-    injectionShouldBeFlagged?: boolean; // expects the source_screening control to fire a warning
-    injectionShouldChangeOutcome?: boolean; // must always be false — asserts the defense actually held
-  };
-};
+export type { EvalCase, EvalCategory } from "@/evals/types";
 
 // --- Derived cases: free, real, and already fully labeled — the 5 guided
 // demo scenarios already carry hand-verified ground truth in
@@ -245,10 +222,14 @@ const NEW_CASES: EvalCase[] = [
   },
 ];
 
-export const EVAL_CASES: EvalCase[] = [...DERIVED_CASES, ...NEW_CASES];
+import { GENERATED_CASES } from "@/evals/generators";
+
+export const EVAL_CASES: EvalCase[] = [...DERIVED_CASES, ...NEW_CASES, ...GENERATED_CASES];
 
 // Honest accounting against CLAUDE.md section 15's targets — read by
 // evals/run.ts and the /evals page. Update this if EVAL_CASES changes shape.
+// v1Target/fullTarget are the PROJECT'S stated targets (unchanged by how
+// many cases actually exist right now) — currentCount is the honest count.
 export const EVAL_DATASET_NOTE = {
   v1Target: 21,
   fullTarget: 100,
