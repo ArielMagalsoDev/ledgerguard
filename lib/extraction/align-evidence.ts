@@ -46,6 +46,28 @@ function normalizeWhitespace(s: string): string {
   return s.replace(/\s+/g, " ").trim();
 }
 
+/**
+ * The hallucination guard closes one gap short of complete without this: the
+ * wrap-boundary `pairs` tier below exists to recover a quote split across a
+ * genuine word-wrap, but nothing stopped the model from citing a "quote"
+ * that's really two adjacent-but-unrelated lines glued together — e.g.
+ * quoting "Subtotal: $450.00 Sales Tax (8%): $36.00" as if it supported a
+ * `total` field, when $486.00 (the value actually being claimed) never
+ * appears anywhere in that quote at all. Found by evals/run.ts's held-out
+ * split (an "ambiguous scan" case with no printed "Total Due" line):
+ * extraction confidently computed subtotal+tax, cited the two source lines
+ * as "evidence" for total, and — because that concatenation happened to
+ * exist in the pairs haystack — the field came back "verified". A real
+ * false clearance, not a test artifact. This check is deliberately cheap:
+ * if the model's own value isn't even present in its own quote, the quote
+ * cannot be real evidence for it, independent of whether it's found in the
+ * document at all.
+ */
+function valueAppearsInQuote(value: string, quote: string): boolean {
+  const strip = (s: string) => s.replace(/[,$]/g, "");
+  return strip(quote).includes(strip(value));
+}
+
 function searchTier(quote: string, haystacks: Haystack[]): Haystack[] {
   const exact = haystacks.filter((h) => h.text.includes(quote));
   if (exact.length > 0) return exact;
@@ -82,7 +104,7 @@ export function alignField(
     return { field: fieldName, value: null, confidence: 0, status: "missing", evidence: [] };
   }
 
-  if (raw.quote == null) {
+  if (raw.quote == null || !valueAppearsInQuote(raw.value, raw.quote)) {
     return {
       field: fieldName,
       value: raw.value,

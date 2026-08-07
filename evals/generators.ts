@@ -5,7 +5,7 @@
 // real seed data (evals/seed-data.ts), the same way lib/money.ts's
 // integer-cents approach avoids float drift in the app itself.
 import type { InvoiceDocumentLine } from "@/lib/types";
-import type { EvalCase } from "@/evals/types";
+import type { EvalCase, EvalLineItemExpectation } from "@/evals/types";
 import { SEED_SUPPLIERS, OPEN_POS, SEED_HISTORICAL_INVOICES, type SeedSupplier, type SeedPo } from "@/evals/seed-data";
 
 const TAX_RATE = 0.08;
@@ -56,7 +56,7 @@ function buildDocument(opts: {
   remitRoutingLast4?: string;
   notes?: string;
   omitSupplierTaxId?: boolean;
-}): { lines: InvoiceDocumentLine[]; subtotalCents: number; taxCents: number; totalCents: number } {
+}): { lines: InvoiceDocumentLine[]; subtotalCents: number; taxCents: number; totalCents: number; lineRecords: EvalLineItemExpectation[] } {
   const lineTotalsCents = opts.lines.map((l) => l.lineTotalCentsOverride ?? Math.round(l.qty * toCents(l.unitPrice)));
   const subtotalCents = opts.subtotalCentsOverride ?? lineTotalsCents.reduce((a, b) => a + b, 0);
   const taxCents = opts.taxCentsOverride ?? Math.round(subtotalCents * TAX_RATE);
@@ -91,7 +91,14 @@ function buildDocument(opts: {
     text: `Remit to: ${opts.remitBankName ?? opts.supplier.bankName}, Acct ending ${opts.remitAccountLast4 ?? opts.supplier.bankAccountLast4}, Routing ending ${opts.remitRoutingLast4 ?? opts.supplier.bankRoutingLast4}`,
   });
 
-  return { lines: doc, subtotalCents, taxCents, totalCents };
+  const lineRecords: EvalLineItemExpectation[] = opts.lines.map((l, idx) => ({
+    description: l.description,
+    quantity: String(l.qty),
+    unitPrice: l.unitPrice.toFixed(2),
+    lineTotal: centsToStr(lineTotalsCents[idx]),
+  }));
+
+  return { lines: doc, subtotalCents, taxCents, totalCents, lineRecords };
 }
 
 // --- Clean matched invoices: invoice mirrors the PO's lines exactly. ---
@@ -101,7 +108,7 @@ function generateCleanMatch(count: number): EvalCase[] {
     const supplier = supplierByName(po.supplierName);
     const invoiceNumber = `${supplier.prefix}-GC${i + 1}`;
     const invoiceDate = addDays("2026-08-01", i);
-    const { lines, totalCents } = buildDocument({
+    const { lines, totalCents, lineRecords } = buildDocument({
       supplier,
       invoiceNumber,
       invoiceDate,
@@ -120,6 +127,8 @@ function generateCleanMatch(count: number): EvalCase[] {
         total: centsToStr(totalCents),
         supplierMatch: "exact",
         purchaseOrderMatch: "exact",
+        expectDuplicateCandidates: false,
+        lineItems: lineRecords,
       },
     } satisfies EvalCase;
   });
@@ -139,7 +148,7 @@ function generatePriceException(count: number): EvalCase[] {
       qty: l.approvedQuantity,
       unitPrice: idx === 0 ? Math.round(l.unitPrice * 1.2 * 100) / 100 : l.unitPrice,
     }));
-    const { lines, totalCents } = buildDocument({
+    const { lines, totalCents, lineRecords } = buildDocument({
       supplier,
       invoiceNumber,
       invoiceDate,
@@ -158,6 +167,8 @@ function generatePriceException(count: number): EvalCase[] {
         total: centsToStr(totalCents),
         supplierMatch: "exact",
         purchaseOrderMatch: "partial",
+        expectDuplicateCandidates: false,
+        lineItems: lineRecords,
       },
     } satisfies EvalCase;
   });
@@ -176,7 +187,7 @@ function generateArithmeticFailure(count: number): EvalCase[] {
     const invoiceDate = addDays("2026-08-01", i);
     const correctFirstLineCents = Math.round(po.lines[0].approvedQuantity * toCents(po.lines[0].unitPrice));
     const wrongFirstLineCents = correctFirstLineCents + 1500; // +$15.00, always a clean, unambiguous mismatch
-    const { lines, totalCents } = buildDocument({
+    const { lines, totalCents, lineRecords } = buildDocument({
       supplier,
       invoiceNumber,
       invoiceDate,
@@ -200,6 +211,12 @@ function generateArithmeticFailure(count: number): EvalCase[] {
         total: centsToStr(totalCents),
         supplierMatch: "exact",
         purchaseOrderMatch: "exact",
+        expectDuplicateCandidates: false,
+        // Line 1's total in lineRecords reflects the WRONG printed figure —
+        // extraction should read what's on the document; the arithmetic
+        // control (a separate deterministic check) is what's supposed to
+        // catch the mismatch, not extraction itself.
+        lineItems: lineRecords,
       },
     } satisfies EvalCase;
   });
@@ -237,6 +254,7 @@ function generateDuplicates(count: number): EvalCase[] {
         total: hist.total,
         supplierMatch: "exact",
         purchaseOrderMatch: "none",
+        expectDuplicateCandidates: true,
       },
     } satisfies EvalCase;
   });
@@ -279,6 +297,7 @@ function generateBankDetailMismatch(count: number): EvalCase[] {
         invoiceNumber,
         total: centsToStr(totalCents),
         supplierMatch: "exact",
+        expectDuplicateCandidates: false,
       },
     } satisfies EvalCase;
   });
@@ -311,7 +330,7 @@ function generateAmbiguousScans(count: number): EvalCase[] {
       lines: [{ description: "One-time service call", qty: 1, unitPrice: 450 }],
     };
     const { lines, totalCents } = buildDocument(variant.apply(base));
-    const expected: EvalCase["expected"] = { outcome: "exception_review", requiresReview: true };
+    const expected: EvalCase["expected"] = { outcome: "exception_review", requiresReview: true, expectDuplicateCandidates: false };
     if (variant.label !== "missing invoice number") expected.invoiceNumber = invoiceNumber;
     if (variant.label !== "missing total") expected.total = centsToStr(totalCents);
     if (variant.label !== "missing supplier tax ID") expected.supplierMatch = "exact";

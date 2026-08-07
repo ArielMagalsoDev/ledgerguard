@@ -28,13 +28,21 @@ function check(label: string, condition: boolean, detail?: string) {
 const field = (value: string | null, quote: string | null) => ({ value, quote });
 
 // A minimal document text layer — only "Invoice #: PGL-9001" and the line
-// items are actually printed on the page.
+// items are actually printed on the page. Test 4 needs a few more real
+// lines (date/currency/tax) to genuinely verify against, now that
+// align-evidence.ts requires a field's own value to appear in its quote —
+// see that file's valueAppearsInQuote for why.
 const textLayer: TextLayerLine[] = [
   { page: 1, text: "Invoice #: PGL-9001", box: [0.1, 0.1, 0.4, 0.13] },
-  { page: 1, text: "Supplier: Palisade Grounds & Landscaping", box: [0.1, 0.14, 0.5, 0.17] },
-  { page: 1, text: "Widget install — Qty 2 @ $50.00 = $100.00", box: [0.1, 0.2, 0.6, 0.23] },
-  { page: 1, text: "Subtotal: $100.00", box: [0.1, 0.26, 0.4, 0.29] },
-  { page: 1, text: "Total Due: $100.00", box: [0.1, 0.32, 0.4, 0.35] },
+  { page: 1, text: "Invoice Date: 2026-08-01", box: [0.1, 0.14, 0.4, 0.17] },
+  { page: 1, text: "Due Date: 2026-09-01", box: [0.1, 0.18, 0.4, 0.21] },
+  { page: 1, text: "Supplier: Palisade Grounds & Landscaping", box: [0.1, 0.22, 0.5, 0.25] },
+  { page: 1, text: "Supplier Tax ID: 38-2205617", box: [0.1, 0.26, 0.4, 0.29] },
+  { page: 1, text: "Currency: USD", box: [0.1, 0.3, 0.3, 0.33] },
+  { page: 1, text: "Widget install — Qty 2 @ $50.00 = $100.00", box: [0.1, 0.32, 0.6, 0.35] },
+  { page: 1, text: "Subtotal: $100.00", box: [0.1, 0.38, 0.4, 0.41] },
+  { page: 1, text: "Sales Tax: $0.00", box: [0.1, 0.42, 0.4, 0.45] },
+  { page: 1, text: "Total Due: $100.00", box: [0.1, 0.46, 0.4, 0.49] },
 ];
 
 console.log("Test 1: a value the model claims but never quotes drops to uncertain");
@@ -145,14 +153,14 @@ console.log("\nTest 4: a fully clean, fully verifiable extraction passes validat
 {
   const raw = rawExtractionSchema.parse({
     invoiceNumber: field("PGL-9001", "Invoice #: PGL-9001"),
-    invoiceDate: field("2026-08-01", "Invoice #: PGL-9001"),
-    dueDate: field("2026-09-01", "Invoice #: PGL-9001"),
+    invoiceDate: field("2026-08-01", "Invoice Date: 2026-08-01"),
+    dueDate: field("2026-09-01", "Due Date: 2026-09-01"),
     supplierName: field("Palisade Grounds & Landscaping", "Supplier: Palisade Grounds & Landscaping"),
-    supplierTaxId: field("38-2205617", "Supplier: Palisade Grounds & Landscaping"),
+    supplierTaxId: field("38-2205617", "Supplier Tax ID: 38-2205617"),
     purchaseOrderNumber: field(null, null),
-    currency: field("USD", "Total Due: $100.00"),
+    currency: field("USD", "Currency: USD"),
     subtotal: field("100.00", "Subtotal: $100.00"),
-    tax: field("0.00", "Subtotal: $100.00"),
+    tax: field("0.00", "Sales Tax: $0.00"),
     total: field("100.00", "Total Due: $100.00"),
     remittanceDetails: field(null, null),
     notes: field(null, null),

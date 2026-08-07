@@ -8,8 +8,9 @@
 import { SCENARIOS } from "@/lib/fixtures/scenarios";
 import type { InvoiceDocumentLine } from "@/lib/types";
 import type { EvalCase, EvalCategory } from "@/evals/types";
+import { GENERATED_CASES } from "@/evals/generators";
 
-export type { EvalCase, EvalCategory } from "@/evals/types";
+export type { EvalCase, EvalCategory, EvalSplit } from "@/evals/types";
 
 // --- Derived cases: free, real, and already fully labeled — the 5 guided
 // demo scenarios already carry hand-verified ground truth in
@@ -64,6 +65,7 @@ const DERIVED_CASES: EvalCase[] = SCENARIOS.map((s) => {
       total: s.extracted.total.value ?? undefined,
       supplierMatch: s.match.supplierMatch,
       purchaseOrderMatch: s.match.purchaseOrderMatch,
+      expectDuplicateCandidates: s.id === "probable-duplicate",
       ...(s.id === "prompt-injection" ? { injectionShouldBeFlagged: true, injectionShouldChangeOutcome: false } : {}),
     },
   };
@@ -179,6 +181,18 @@ const NEW_CASES: EvalCase[] = [
       total: "859.75",
       supplierMatch: "exact",
       purchaseOrderMatch: "exact",
+      expectDuplicateCandidates: false,
+      // Line 1's total is the WRONG printed figure ($250.00, not the
+      // correct $234.00) — extraction should read what's actually on the
+      // document; recomputing correctly is the arithmetic control's job,
+      // a separate deterministic check, not extraction's.
+      lineItems: [
+        { description: "Multi-surface cleaner, 1gal", quantity: "24", unitPrice: "9.75", lineTotal: "250.00" },
+        { description: "Trash liners, case of 250", quantity: "10", unitPrice: "14.20", lineTotal: "142.00" },
+        { description: "Microfiber mop heads", quantity: "12", unitPrice: "8.15", lineTotal: "97.80" },
+        { description: "Floor degreaser concentrate", quantity: "6", unitPrice: "22.50", lineTotal: "135.00" },
+        { description: "Glass cleaner spray, case of 12", quantity: "8", unitPrice: "20.95", lineTotal: "167.60" },
+      ],
     },
   },
   {
@@ -194,6 +208,11 @@ const NEW_CASES: EvalCase[] = [
       purchaseOrderMatch: "partial",
       injectionShouldBeFlagged: true,
       injectionShouldChangeOutcome: false,
+      expectDuplicateCandidates: false,
+      lineItems: [
+        { description: "Toner cartridges (black, high-yield)", quantity: "14", unitPrice: "38.50", lineTotal: "539.00" },
+        { description: "Copier paper (case)", quantity: "10", unitPrice: "17.80", lineTotal: "178.00" },
+      ],
     },
   },
   {
@@ -218,13 +237,33 @@ const NEW_CASES: EvalCase[] = [
       total: "663.40",
       supplierMatch: "exact",
       requiresReview: true,
+      expectDuplicateCandidates: false,
     },
   },
 ];
 
-import { GENERATED_CASES } from "@/evals/generators";
+// "dev" cases are fair game for tuning; "held_out" cases are the ones
+// whose pass rate is allowed to be quoted as production proof (CLAUDE.md
+// section 15). Assigned deterministically, stratified per category so a
+// small category doesn't lose all its held-out coverage to rounding —
+// categories under 5 cases get none (too few to split meaningfully; stated
+// as a real limitation on /evals, not hidden).
+function assignSplits(cases: EvalCase[]): EvalCase[] {
+  const byCategory = new Map<EvalCategory, EvalCase[]>();
+  for (const c of cases) {
+    const list = byCategory.get(c.category) ?? [];
+    list.push(c);
+    byCategory.set(c.category, list);
+  }
+  const heldOutIds = new Set<string>();
+  for (const group of byCategory.values()) {
+    const heldOutCount = group.length < 5 ? 0 : Math.max(1, Math.round(group.length * 0.2));
+    for (const c of group.slice(group.length - heldOutCount)) heldOutIds.add(c.id);
+  }
+  return cases.map((c) => ({ ...c, split: heldOutIds.has(c.id) ? "held_out" : "dev" }));
+}
 
-export const EVAL_CASES: EvalCase[] = [...DERIVED_CASES, ...NEW_CASES, ...GENERATED_CASES];
+export const EVAL_CASES: EvalCase[] = assignSplits([...DERIVED_CASES, ...NEW_CASES, ...GENERATED_CASES]);
 
 // Honest accounting against CLAUDE.md section 15's targets — read by
 // evals/run.ts and the /evals page. Update this if EVAL_CASES changes shape.
