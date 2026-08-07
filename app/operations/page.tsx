@@ -7,7 +7,7 @@ import { OUTCOME_META } from "@/lib/outcome";
 import type { DecisionOutcome } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "Operations — LedgerGuard",
+  title: "Operations — LedgerSentry",
   description: "Audit events, retries, latency, and cost.",
 };
 

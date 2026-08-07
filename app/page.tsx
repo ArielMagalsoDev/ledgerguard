@@ -53,7 +53,7 @@ const TRILOGY = [
     proof: "Enrichment, identity resolution, deterministic scoring, CRM safety",
   },
   {
-    name: "LedgerGuard",
+    name: "LedgerSentry",
     role: "Finance operations",
     proof: "Document extraction, financial controls, matching, approvals, accounting integration",
     current: true,
@@ -72,7 +72,7 @@ export default function Home() {
           Prepare routine invoices without guessing at financial data.
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">
-          LedgerGuard extracts invoice data with visible evidence, recalculates
+          LedgerSentry extracts invoice data with visible evidence, recalculates
           every amount with deterministic code, matches suppliers and purchase
           orders, and routes exceptions to the right approver — never to a model&rsquo;s
           best guess. It never authorizes a payment on its own.

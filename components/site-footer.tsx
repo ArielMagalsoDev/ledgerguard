@@ -3,7 +3,7 @@ export function SiteFooter() {
     <footer className="mt-24 border-t border-rule">
       <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8">
         <p className="font-tabular text-xs leading-relaxed text-ink-faint">
-          LedgerGuard is a portfolio demonstration. Keystone Facilities Group,
+          LedgerSentry is a portfolio demonstration. Keystone Facilities Group,
           every supplier, purchase order, invoice, and dollar figure on this
           site is fictional. No real financial or supplier data is processed.
           No workflow — in this demo or described in its design — is capable

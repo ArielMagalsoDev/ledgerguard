@@ -22,9 +22,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "LedgerGuard — AI invoice exception automation",
+  title: "LedgerSentry — AI invoice exception automation",
   description:
-    "LedgerGuard prepares safe invoices for approval and sends financial exceptions to the right person — with every field, rule, and decision traceable to evidence.",
+    "LedgerSentry prepares safe invoices for approval and sends financial exceptions to the right person — with every field, rule, and decision traceable to evidence.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

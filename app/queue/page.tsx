@@ -9,7 +9,7 @@ import { formatRoute } from "@/lib/route-labels";
 import type { DecisionOutcome } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: "AP Review Queue — LedgerGuard",
+  title: "AP Review Queue — LedgerSentry",
   description: "Real invoices grouped by Ready, Exception, Duplicate Hold, and Blocked.",
 };
 

@@ -1,16 +1,16 @@
 @AGENTS.md
 
-# LedgerGuard — AI Invoice Exception Automation Plan
+# LedgerSentry — AI Invoice Exception Automation Plan
 
 ## 1. Product summary
 
-LedgerGuard is an auditable accounts-payable automation for businesses that process supplier invoices against purchase orders and receiving records. It extracts structured invoice data, validates arithmetic, matches suppliers and purchase orders, detects duplicates, identifies exceptions, and routes each invoice to the appropriate approval path.
+LedgerSentry is an auditable accounts-payable automation for businesses that process supplier invoices against purchase orders and receiving records. It extracts structured invoice data, validates arithmetic, matches suppliers and purchase orders, detects duplicates, identifies exceptions, and routes each invoice to the appropriate approval path.
 
 The portfolio story is:
 
-> LedgerGuard prepares safe invoices for approval and sends financial exceptions to the right person — with every field, rule, and decision traceable to evidence.
+> LedgerSentry prepares safe invoices for approval and sends financial exceptions to the right person — with every field, rule, and decision traceable to evidence.
 
-This completes the trilogy: Meridian Assist proves "knows when not to answer," SignalDesk proves "knows when not to act," LedgerGuard proves **"never moves money on a guess."** It demonstrates document processing, multimodal extraction, deterministic financial controls, three-way matching, approval workflows, accounting-system integration, and production-grade exception handling.
+This completes the trilogy: Meridian Assist proves "knows when not to answer," SignalDesk proves "knows when not to act," LedgerSentry proves **"never moves money on a guess."** It demonstrates document processing, multimodal extraction, deterministic financial controls, three-way matching, approval workflows, accounting-system integration, and production-grade exception handling.
 
 ## 2. Target business and buyer
 
@@ -84,7 +84,7 @@ Accounts-payable teams receive invoices through email, upload portals, and share
 
 The work is repetitive but financially sensitive. A model that extracts an incorrect total, invents a purchase-order match, or overlooks a duplicate can create overpayments and unreliable accounting records.
 
-LedgerGuard automates extraction and preparation while keeping financial decisions deterministic and approval-controlled.
+LedgerSentry automates extraction and preparation while keeping financial decisions deterministic and approval-controlled.
 
 ## 5. Product promise
 
@@ -104,7 +104,7 @@ Process routine invoices faster without allowing AI to authorize unsupported pay
 
 ### Explicit non-promises
 
-- LedgerGuard does not autonomously move money.
+- LedgerSentry does not autonomously move money.
 - It does not replace finance approval authority.
 - It does not infer missing bank details, tax identifiers, invoice numbers, or purchase-order numbers.
 - An extraction-confidence score alone never authorizes an invoice.
@@ -269,7 +269,7 @@ Intake boundary and file validation, document rendering and OCR, structured extr
 
 ### Design identity
 
-LedgerGuard gets its own design system, deliberately distinct from Meridian Assist (warm paper / Salix-derived blues) and SignalDesk (Agenio light gray / neon lime). Direction to decide at Phase 1 — a "ledger" aesthetic (tabular numerals, ruled lines, deep green or oxblood accent on ivory) is the obvious candidate. Do not reuse either sibling's palette.
+LedgerSentry gets its own design system, deliberately distinct from Meridian Assist (warm paper / Salix-derived blues) and SignalDesk (Agenio light gray / neon lime). Direction to decide at Phase 1 — a "ledger" aesthetic (tabular numerals, ruled lines, deep green or oxblood accent on ivory) is the obvious candidate. Do not reuse either sibling's palette.
 
 ## 10. AI versus deterministic logic
 
@@ -620,7 +620,7 @@ Port directly from grounded-rag/SignalDesk rather than rebuilding:
 
 ### Accounting integration (first real integration)
 
-Use a development or sandbox accounting system: **QuickBooks Online sandbox** (first choice), Xero demo company, or a fully local fictional accounting API if sandbox access is impractical. Support: supplier lookup, PO lookup, existing-bill duplicate lookup, draft bill creation, attachment reference, external IDs stored in audit history. **Drafts only. No payment execution, ever.** One complete accounting integration is more persuasive than multiple simulated connectors. (This is LedgerGuard's equivalent of SignalDesk's still-open HubSpot phase — expect it to be the last big gap between "demo" and "integration I can show.")
+Use a development or sandbox accounting system: **QuickBooks Online sandbox** (first choice), Xero demo company, or a fully local fictional accounting API if sandbox access is impractical. Support: supplier lookup, PO lookup, existing-bill duplicate lookup, draft bill creation, attachment reference, external IDs stored in audit history. **Drafts only. No payment execution, ever.** One complete accounting integration is more persuasive than multiple simulated connectors. (This is LedgerSentry's equivalent of SignalDesk's still-open HubSpot phase — expect it to be the last big gap between "demo" and "integration I can show.")
 
 ### Supporting integrations
 
@@ -777,13 +777,13 @@ Reduced manual invoice entry, faster approval preparation, fewer duplicate payme
 | --- | --- | --- |
 | Meridian Assist (grounded-rag) | Customer support | RAG, citations, claim verification, refusal, escalation |
 | SignalDesk | Revenue operations | Enrichment, identity resolution, deterministic scoring, CRM safety |
-| LedgerGuard | Finance operations | Document extraction, financial controls, matching, approvals, accounting integration |
+| LedgerSentry | Finance operations | Document extraction, financial controls, matching, approvals, accounting integration |
 
 Together: knowledge work, sales operations, and document-heavy financial processes — each with human review, deterministic controls, evaluations, and integrations applied appropriately.
 
 ## 23. Definition of done
 
-LedgerGuard is portfolio-ready when:
+LedgerSentry is portfolio-ready when:
 
 - Five guided scenarios (including the injection scenario) work reliably with fictional data.
 - Every extracted value links to visible document evidence via deterministic token alignment.

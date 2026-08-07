@@ -14,7 +14,7 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
         <Link href="/" className="flex items-baseline gap-2">
           <span className="font-display text-xl tracking-tight text-ink">
-            LedgerGuard
+            LedgerSentry
           </span>
           <span className="hidden text-xs uppercase tracking-[0.14em] text-ink-faint sm:inline">
             AP exception automation

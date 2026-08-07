@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Bot, Cpu, Users } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Architecture — LedgerGuard",
-  description: "System, security, and integration design for LedgerGuard.",
+  title: "Architecture — LedgerSentry",
+  description: "System, security, and integration design for LedgerSentry.",
 };
 
 type Actor = "ai" | "deterministic" | "human";
