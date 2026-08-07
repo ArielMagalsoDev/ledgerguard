@@ -29,16 +29,36 @@ async function main() {
   // Each run submits fresh invoices carrying the SAME business identity
   // (invoice number, date, total) as the fixture PDF's own printed content —
   // that's deliberate, it's what proves extraction is real. But it means a
-  // second run of this script would otherwise duplicate-match its own first
-  // run's rows. Clean up only this script's own prior test rows — never the
-  // seeded historical data (in particular, never sub_apc_88213_original,
-  // which scenario 3's duplicate check is specifically seeded to depend on).
-  const { error: cleanupError } = await db.from("invoices").delete().like("submission_id", "sub_pipeline_%");
-  if (cleanupError) {
-    console.error(`Cleanup of prior test rows failed: ${cleanupError.message}`);
+  // second run of this script (or scripts/test-accounting.ts, which submits
+  // the same clean-match identity to reach ready_for_approval) would
+  // otherwise duplicate-match a prior run's rows. Clean up both scripts'
+  // prior test rows — never the seeded historical data (in particular,
+  // never sub_apc_88213_original, which scenario 3's duplicate check is
+  // specifically seeded to depend on).
+  //
+  // accounting_bills/review_actions reference invoices with NO ACTION (not
+  // CASCADE) — deleting an invoice that already has a draft bill or a review
+  // action on file fails with a foreign-key violation unless those rows go
+  // first. jobs/controls/decisions/audit_events DO cascade.
+  const { data: staleInvoices, error: staleError } = await db
+    .from("invoices")
+    .select("id")
+    .or("submission_id.like.sub_pipeline_%,submission_id.like.sub_accounting_test_%");
+  if (staleError) {
+    console.error(`Cleanup of prior test rows failed: ${staleError.message}`);
     process.exit(1);
   }
-  console.log("Cleaned up any prior sub_pipeline_* test invoices (cascades to their jobs/controls/decisions/audit_events).\n");
+  const staleIds = (staleInvoices ?? []).map((r) => r.id);
+  if (staleIds.length > 0) {
+    await db.from("accounting_bills").delete().in("invoice_id", staleIds);
+    await db.from("review_actions").delete().in("invoice_id", staleIds);
+    const { error: cleanupError } = await db.from("invoices").delete().in("id", staleIds);
+    if (cleanupError) {
+      console.error(`Cleanup of prior test rows failed: ${cleanupError.message}`);
+      process.exit(1);
+    }
+  }
+  console.log(`Cleaned up ${staleIds.length} prior sub_pipeline_* / sub_accounting_test_* test invoice(s).\n`);
 
   for (const scenario of SCENARIOS) {
     console.log(`\n=== ${scenario.title} (${scenario.id}) ===`);
@@ -51,6 +71,9 @@ async function main() {
       fileHash: `sha256:pipeline-${scenario.id}`,
       mimeType: "application/pdf",
       receivedAt: new Date().toISOString(),
+      // Phase 6: this is what lets /demo and /queue find "the current live
+      // instance of this scenario" instead of reading static fixture data.
+      scenarioKey: scenario.id,
     });
     console.log(`  submitted → invoiceId=${submission.invoiceId} isReplay=${submission.isReplay}`);
     check("intake created a new (non-replay) row", submission.isReplay === false);
@@ -157,6 +180,7 @@ async function main() {
       fileHash: `sha256:pipeline-${scenario.id}`,
       mimeType: "application/pdf",
       receivedAt: new Date().toISOString(),
+      scenarioKey: scenario.id,
     });
     check("replaying the same submissionId is detected", replay.isReplay === true);
     check("replay returns the same invoiceId", replay.invoiceId === submission.invoiceId);

@@ -10,6 +10,7 @@ export const invoiceSubmissionSchema = z.object({
   mimeType: z.enum(["application/pdf", "image/png", "image/jpeg"]),
   receivedAt: z.string().min(1),
   senderEmail: z.string().email().optional(),
+  scenarioKey: z.string().min(1).optional(),
 }) satisfies z.ZodType<InvoiceSubmission>;
 
 export type SubmitInvoiceResult = {
@@ -43,6 +44,7 @@ export async function submitInvoice(
       mime_type: submission.mimeType,
       received_at: submission.receivedAt,
       sender_email: submission.senderEmail ?? null,
+      scenario_key: submission.scenarioKey ?? null,
       status: "pending",
     })
     .select("id, workflow_id, status")

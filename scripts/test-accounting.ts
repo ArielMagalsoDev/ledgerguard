@@ -54,13 +54,29 @@ async function main() {
   // prior `run-demo-pipeline` run would otherwise correctly trip duplicate
   // detection against this script's own fresh submission. Never touches
   // seeded historical data (sub_hist_*) or any other scenario's rows.
-  const { error: cleanupError } = await db.from("invoices").delete().like("submission_id", "sub_accounting_test_%");
-  const { error: cleanupPipelineError } = await db.from("invoices").delete().like("submission_id", "sub_pipeline_clean-match_%");
-  if (cleanupError || cleanupPipelineError) {
-    console.error(`Cleanup of prior test rows failed: ${cleanupError?.message ?? cleanupPipelineError?.message}`);
+  //
+  // accounting_bills references invoices with NO ACTION (not CASCADE) — a
+  // prior successful run of this very script leaves a draft-bill row behind,
+  // which must be deleted before its invoice or the delete below 409s.
+  const { data: staleInvoices, error: staleError } = await db
+    .from("invoices")
+    .select("id")
+    .or("submission_id.like.sub_accounting_test_%,submission_id.like.sub_pipeline_clean-match_%");
+  if (staleError) {
+    console.error(`Cleanup of prior test rows failed: ${staleError.message}`);
     process.exit(1);
   }
-  console.log("Cleaned up any prior sub_accounting_test_* and sub_pipeline_clean-match_* invoices.\n");
+  const staleIds = (staleInvoices ?? []).map((r) => r.id);
+  if (staleIds.length > 0) {
+    await db.from("accounting_bills").delete().in("invoice_id", staleIds);
+    await db.from("review_actions").delete().in("invoice_id", staleIds);
+    const { error: cleanupError } = await db.from("invoices").delete().in("id", staleIds);
+    if (cleanupError) {
+      console.error(`Cleanup of prior test rows failed: ${cleanupError.message}`);
+      process.exit(1);
+    }
+  }
+  console.log(`Cleaned up ${staleIds.length} prior sub_accounting_test_* / sub_pipeline_clean-match_* invoice(s).\n`);
 
   console.log(`=== ${scenario.title} (${scenario.id}) — extraction, matching, decision ===`);
   const submissionId = `sub_accounting_test_${scenario.id}_${Date.now()}`;

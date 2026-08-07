@@ -74,8 +74,8 @@ export async function matchPurchaseOrder(
     severity: po.status === "open" ? "low" : "critical",
     reason:
       po.status === "open"
-        ? `PO-${po.po_number} is open.`
-        : `PO-${po.po_number} is ${po.status}, not open — closed or cancelled purchase orders block automatic routing.`,
+        ? `${po.po_number} is open.`
+        : `${po.po_number} is ${po.status}, not open — closed or cancelled purchase orders block automatic routing.`,
     evidenceReferences: ["purchaseOrderNumber"],
     blocking: true,
   });
@@ -86,7 +86,7 @@ export async function matchPurchaseOrder(
       label: "PO-to-supplier match",
       status: "failed",
       severity: "critical",
-      reason: `PO-${po.po_number} is issued to a different supplier than the one matched on this invoice.`,
+      reason: `${po.po_number} is issued to a different supplier than the one matched on this invoice.`,
       evidenceReferences: ["purchaseOrderNumber", "supplierTaxId"],
       blocking: true,
     });
@@ -117,7 +117,7 @@ export async function matchPurchaseOrder(
         overageNote = ` This pushes the invoice $${centsToDecimalString(overageCents)} (${overagePct}%) over the PO's not-to-exceed amount of $${po.not_to_exceed}, beyond the lower-of-${(policy.totalInvoiceTolerance.pct * 100).toFixed(0)}%/$${policy.totalInvoiceTolerance.flat} total tolerance.`;
       }
       unmatchedLines.push(
-        `"${line.description.value}" ($${line.lineTotal.value ?? "unknown"}) is not on PO-${po.po_number} and has no receipt or separate authorization.${overageNote}`
+        `"${line.description.value}" ($${line.lineTotal.value ?? "unknown"}) is not on ${po.po_number} and has no receipt or separate authorization.${overageNote}`
       );
       continue;
     }
@@ -138,7 +138,7 @@ export async function matchPurchaseOrder(
             label: `Unit-price tolerance — ${candidate.description}`,
             status: "failed",
             severity: "high",
-            reason: `Invoiced $${line.unitPrice.value} vs. PO-${po.po_number} approved $${candidate.unit_price} — $${centsToDecimalString(diff)} over, exceeding the lower-of-${(policy.unitPriceTolerance.pct * 100).toFixed(0)}%/$${policy.unitPriceTolerance.flat} tolerance ($${centsToDecimalString(allowed)} max allowed).`,
+            reason: `Invoiced $${line.unitPrice.value} vs. ${po.po_number} approved $${candidate.unit_price} — $${centsToDecimalString(diff)} over, exceeding the lower-of-${(policy.unitPriceTolerance.pct * 100).toFixed(0)}%/$${policy.unitPriceTolerance.flat} tolerance ($${centsToDecimalString(allowed)} max allowed).`,
             evidenceReferences: ["purchaseOrderNumber"],
             blocking: true,
           });
@@ -158,7 +158,7 @@ export async function matchPurchaseOrder(
             label: `Quantity tolerance — ${candidate.description}`,
             status: "failed",
             severity: "high",
-            reason: `Invoiced ${invoiceQty} vs. PO-${po.po_number} approved maximum ${candidate.approved_quantity} — ${invoiceQty - candidate.approved_quantity} over, with no receipt recording the additional quantity. Quantity tolerance is zero without receipt evidence.`,
+            reason: `Invoiced ${invoiceQty} vs. ${po.po_number} approved maximum ${candidate.approved_quantity} — ${invoiceQty - candidate.approved_quantity} over, with no receipt recording the additional quantity. Quantity tolerance is zero without receipt evidence.`,
             evidenceReferences: ["purchaseOrderNumber"],
             blocking: true,
           });
@@ -178,7 +178,7 @@ export async function matchPurchaseOrder(
       label: "Matched PO line(s)",
       status: "passed",
       severity: "low",
-      reason: `${cleanMatches.length} line(s) match PO-${po.po_number} within tolerance: ${cleanMatches.join(", ")}.`,
+      reason: `${cleanMatches.length} line(s) match ${po.po_number} within tolerance: ${cleanMatches.join(", ")}.`,
       evidenceReferences: ["purchaseOrderNumber"],
       blocking: false,
     });

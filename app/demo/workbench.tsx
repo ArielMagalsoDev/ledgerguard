@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle } from "lucide-react";
-import { SCENARIOS } from "@/lib/fixtures/scenarios";
+import { AlertTriangle, Radio } from "lucide-react";
+import type { DemoScenario } from "@/lib/types";
 import { OutcomeBadge } from "@/components/outcome-badge";
 import { ScenarioSelector } from "@/components/scenario-selector";
 import { InvoiceDocument } from "@/components/invoice-document";
@@ -12,7 +12,16 @@ import { ControlChecklist } from "@/components/control-checklist";
 import { ProposedActionPanel } from "@/components/proposed-action-panel";
 import { AuditTrail } from "@/components/audit-trail";
 
-export function Workbench({ initialScenarioId }: { initialScenarioId?: string }) {
+export function Workbench({
+  scenarios,
+  initialScenarioId,
+}: {
+  scenarios: Array<{ scenario: DemoScenario; isLive: boolean }>;
+  initialScenarioId?: string;
+}) {
+  const SCENARIOS = scenarios.map((s) => s.scenario);
+  const liveById = new Map(scenarios.map((s) => [s.scenario.id, s.isLive]));
+
   const initial =
     (initialScenarioId && SCENARIOS.find((s) => s.id === initialScenarioId)?.id) ??
     SCENARIOS[0].id;
@@ -20,6 +29,7 @@ export function Workbench({ initialScenarioId }: { initialScenarioId?: string })
   const [selectedText, setSelectedText] = useState<string | null>(null);
 
   const scenario = SCENARIOS.find((s) => s.id === activeId) ?? SCENARIOS[0];
+  const isLive = liveById.get(scenario.id) ?? false;
   const flaggedLineIds = scenario.documentLines
     .filter((l) => l.kind === "notes" && scenario.extracted.notes)
     .map((l) => l.id);
@@ -67,6 +77,19 @@ export function Workbench({ initialScenarioId }: { initialScenarioId?: string })
               {scenario.title}
             </h2>
             <OutcomeBadge outcome={scenario.outcome} />
+            <span
+              title={
+                isLive
+                  ? "Real Claude extraction + deterministic matching/control output from the database, tagged by npm run run-demo-pipeline."
+                  : "No live pipeline run found for this scenario yet — showing the static fixture. Run `npm run run-demo-pipeline` to make this real."
+              }
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
+                isLive ? "bg-[var(--ready-bg)] text-ready" : "bg-paper-raised text-ink-faint"
+              }`}
+            >
+              <Radio className="h-2.5 w-2.5" aria-hidden />
+              {isLive ? "Live" : "Fixture"}
+            </span>
           </div>
           <p className="mt-1 text-sm text-ink-muted">{scenario.tagline}</p>
         </div>

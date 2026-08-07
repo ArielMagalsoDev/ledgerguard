@@ -745,6 +745,47 @@ export type Database = {
         }
         Relationships: []
       }
+      review_actions: {
+        Row: {
+          action: string
+          actor_name: string
+          actor_role: string
+          comment: string | null
+          created_at: string
+          id: string
+          invoice_id: string
+          reassigned_to: string | null
+        }
+        Insert: {
+          action: string
+          actor_name: string
+          actor_role: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          invoice_id: string
+          reassigned_to?: string | null
+        }
+        Update: {
+          action?: string
+          actor_name?: string
+          actor_role?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          reassigned_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_actions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       spend_ledger: {
         Row: {
           day: string

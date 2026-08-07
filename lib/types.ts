@@ -9,6 +9,11 @@ export type InvoiceSubmission = {
   mimeType: "application/pdf" | "image/png" | "image/jpeg";
   receivedAt: string;
   senderEmail?: string;
+  // Links a live invoice row back to lib/fixtures/scenarios.ts's DemoScenario.id
+  // (e.g. "clean-match") — Phase 6's /demo reads the latest row per key to show
+  // real pipeline output instead of static fixture data. Only ever set by
+  // demo_scenario submissions; never present on a real intake.
+  scenarioKey?: string;
 };
 
 export type FieldStatus = "verified" | "uncertain" | "conflicting" | "missing";
