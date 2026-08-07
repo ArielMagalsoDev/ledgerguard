@@ -9,6 +9,7 @@ import { MatchEvidencePanel } from "@/components/match-evidence-panel";
 import { ControlChecklist } from "@/components/control-checklist";
 import { ProposedActionPanel } from "@/components/proposed-action-panel";
 import { AuditTrail } from "@/components/audit-trail";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 
 // The real stages the pipeline runs, in order — same stage labels
 // process-invoice-job.ts actually writes as audit_events. Shown while the
@@ -53,6 +54,8 @@ export function UploadFlow() {
   const [result, setResult] = useState<ResultState | null>(null);
   const [selectedText, setSelectedText] = useState<string | null>(null);
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRequired = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const msRemaining = useCountdown(result?.expiresAt ?? null);
 
@@ -81,6 +84,7 @@ export function UploadFlow() {
 
     const formData = new FormData();
     formData.append("file", file);
+    if (turnstileToken) formData.append("turnstileToken", turnstileToken);
 
     try {
       const res = await fetch("/api/upload", { method: "POST", body: formData });
@@ -133,6 +137,7 @@ export function UploadFlow() {
     setErrorMessage(null);
     setDeleteConfirmed(false);
     setSelectedText(null);
+    setTurnstileToken(null);
     setStage("ready");
   }
 
@@ -360,9 +365,11 @@ export function UploadFlow() {
 
       {errorMessage && <p className="mt-3 text-sm text-blocked">{errorMessage}</p>}
 
+      {file && <TurnstileWidget onToken={setTurnstileToken} />}
+
       <button
         type="button"
-        disabled={!file}
+        disabled={!file || (turnstileRequired && !turnstileToken)}
         onClick={handleSubmit}
         className="btn-pill btn-pill-primary mt-5 disabled:cursor-not-allowed disabled:opacity-40"
       >
