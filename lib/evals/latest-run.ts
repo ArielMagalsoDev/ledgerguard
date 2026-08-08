@@ -13,6 +13,18 @@ export type EvalRunRow = {
 
 export async function getLatestEvalRun(): Promise<EvalRunRow | null> {
   const db = supabaseAdmin();
-  const { data } = await db.from("eval_runs").select("*").order("created_at", { ascending: false }).limit(1).maybeSingle();
+  // Excludes upload_sandbox_* rows (scripts/run-upload-evals.ts) — without
+  // this, the single most-recent eval_runs row could be an upload-sandbox
+  // validation run instead of a seeded-pipeline run, silently substituting
+  // its pass count and "n/a" metrics into the page's production-proof
+  // section. Caught by inspection after adding the upload-eval runner;
+  // see lib/evals/latest-upload-eval-run.ts for its dedicated query.
+  const { data } = await db
+    .from("eval_runs")
+    .select("*")
+    .not("run_label", "like", "upload_sandbox_%")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
   return (data as EvalRunRow | null) ?? null;
 }

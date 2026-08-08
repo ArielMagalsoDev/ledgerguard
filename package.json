@@ -13,7 +13,9 @@
     "test-matching": "tsx --env-file=.env.local scripts/test-matching-guardrails.ts",
     "test-accounting": "tsx --env-file=.env.local scripts/test-accounting.ts",
     "test-upload-sandbox": "tsx --env-file=.env.local scripts/test-upload-sandbox.ts",
-    "run-evals": "tsx --env-file=.env.local evals/run.ts"
+    "test-upload-abuse": "tsx --env-file=.env.local scripts/test-upload-abuse.ts",
+    "run-evals": "tsx --env-file=.env.local evals/run.ts",
+    "run-upload-evals": "tsx --env-file=.env.local scripts/run-upload-evals.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",

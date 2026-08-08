@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { EVAL_CASES, EVAL_DATASET_NOTE, CATEGORY_META, type EvalCategory } from "@/evals/cases";
 import { getLatestEvalRun } from "@/lib/evals/latest-run";
+import { getLatestUploadEvalRun } from "@/lib/evals/latest-upload-eval-run";
 
 export const metadata: Metadata = {
   title: "Evaluations — Ledger Guard",
@@ -58,6 +59,7 @@ function MetricsTable({ metrics, caseCount }: { metrics: Record<string, unknown>
 
 export default async function EvalsPage() {
   const run = await getLatestEvalRun();
+  const uploadRun = await getLatestUploadEvalRun();
 
   const categoryCounts = new Map<EvalCategory, number>();
   const heldOutCounts = new Map<EvalCategory, number>();
@@ -177,6 +179,80 @@ export default async function EvalsPage() {
           </section>
         </>
       )}
+
+      {/* Upload sandbox validation — a distinct code path (source="upload",
+          the upload-mode policy variant) and a distinct, unblended result
+          set, per ledgerguard.md Phase 4: never presented as part of the
+          seeded pipeline's production-proof numbers above. */}
+      <section className="mt-14">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-rule-strong pb-2">
+          <h2 className="font-display text-xl font-semibold text-ink">Upload sandbox validation results</h2>
+          {uploadRun && (
+            <span className={`font-tabular text-sm font-semibold ${uploadRun.passed_cases === uploadRun.total_cases ? "text-ready" : "text-exception"}`}>
+              {uploadRun.passed_cases}/{uploadRun.total_cases} cases passed
+            </span>
+          )}
+        </div>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
+          <code className="font-tabular text-xs">npm run run-upload-evals</code> runs a small, separate case set through
+          the actual bring-your-own-invoice upload path (<code className="font-tabular text-xs">processUpload</code>,
+          not the seeded-scenario intake above) to prove the upload-mode policy variant behaves as designed — most
+          importantly, that an uploaded document can <strong className="text-ink">never</strong> reach{" "}
+          <code className="font-tabular text-xs">ready_for_approval</code>, even one that would otherwise cleanly
+          match everything. This is validation of a code path, not a statistical accuracy claim — it is never
+          combined with the held-out or dev numbers above.
+        </p>
+
+        {!uploadRun && (
+          <p className="mt-4 rounded border border-rule bg-paper-raised/50 px-4 py-3 text-sm text-ink-muted">
+            No upload-eval run yet — run <code className="font-tabular text-xs">npm run run-upload-evals</code> to
+            populate this section.
+          </p>
+        )}
+
+        {uploadRun && (
+          <>
+            <p className="mt-2 text-xs text-ink-faint">{new Date(uploadRun.created_at).toLocaleString()}</p>
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[560px] text-left text-sm">
+                <thead>
+                  <tr className="text-[11px] uppercase tracking-wide text-ink-faint">
+                    <th className="pb-2 pr-4 font-medium">Case</th>
+                    <th className="pb-2 pr-4 font-medium">Outcome</th>
+                    <th className="pb-2 font-medium">Result</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-rule">
+                  {(uploadRun.per_case as Array<{ id: string; title: string; pass: boolean; outcome: string | null; error?: string; checks: Record<string, boolean> }>).map((c) => (
+                    <tr key={c.id}>
+                      <td className="py-2.5 pr-4 text-ink">{c.title}</td>
+                      <td className="py-2.5 pr-4 font-tabular text-ink-muted">{c.outcome ?? "—"}</td>
+                      <td className="py-2.5">
+                        {c.error ? (
+                          <span className="inline-flex items-center gap-1.5 text-blocked" title={c.error}>
+                            <AlertCircle className="h-3.5 w-3.5" aria-hidden />
+                            Error
+                          </span>
+                        ) : c.pass ? (
+                          <span className="inline-flex items-center gap-1.5 text-ready">
+                            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+                            Pass
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-blocked" title={JSON.stringify(c.checks)}>
+                            <XCircle className="h-3.5 w-3.5" aria-hidden />
+                            Fail
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </section>
 
       {/* Dataset */}
       <section className="mt-14">
