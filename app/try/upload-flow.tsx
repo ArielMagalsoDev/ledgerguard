@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, CheckCircle2, Clock, Trash2, UploadCloud } from "lucide-react";
 import type { DemoScenario } from "@/lib/types";
 import { OutcomeBadge } from "@/components/outcome-badge";
@@ -59,7 +59,7 @@ export function UploadFlow() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const msRemaining = useCountdown(result?.expiresAt ?? null);
 
-  const pollForResult = useCallback(async (invoiceId: string, attemptsLeft: number) => {
+  async function pollForResult(invoiceId: string, attemptsLeft: number) {
     const res = await fetch(`/api/upload/session?invoiceId=${invoiceId}`);
     if (res.status === 200) {
       const data = await res.json();
@@ -75,7 +75,7 @@ export function UploadFlow() {
       return;
     }
     setTimeout(() => pollForResult(invoiceId, attemptsLeft - 1), 2000);
-  }, []);
+  }
 
   async function handleSubmit() {
     if (!file) return;

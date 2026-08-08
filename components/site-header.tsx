@@ -6,6 +6,7 @@ const NAV = [
   { href: "/evals", label: "Evals" },
   { href: "/architecture", label: "Architecture" },
   { href: "/operations", label: "Operations" },
+  { href: "/case-study", label: "Case study" },
 ];
 
 // Traced from agero.framer.website's own status chip (an inline SVG, not a

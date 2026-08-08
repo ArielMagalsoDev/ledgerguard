@@ -11,12 +11,13 @@ automation, RAG + citations) and SignalDesk (revenue operations, deterministic
 lead scoring). Full product spec — business case, data interfaces, matching
 and tolerance policy, security posture, roadmap — is in [`CLAUDE.md`](./CLAUDE.md).
 
-## Status: Phase 1 — business-story mockup
+## Status
 
-Landing page, AP workbench, architecture, evals, queue, and operations pages
-are built on static fictional fixtures (fictional company: **Keystone
-Facilities Group**). No real extraction pipeline, database, or accounting
-integration yet — those are Phases 2–5 in `CLAUDE.md`.
+The public application runs a real Claude extraction pipeline over fictional
+invoice PDFs, persists workflow and audit data in Supabase Postgres, applies
+deterministic matching and financial controls, and reports evaluation,
+latency, and model-cost evidence. The QuickBooks sandbox adapter is implemented,
+but public demo workflows deliberately stop before external accounting writes.
 
 All 5 guided scenarios are implemented and verified end to end, including the
 required embedded-instruction (prompt-injection) case:
@@ -36,9 +37,17 @@ sibling projects' visual identities. See `app/globals.css`.
 
 ## Stack
 
-Next.js 16 (App Router, TypeScript strict, Tailwind v4), no external
-dependencies beyond `lucide-react` for icons. Supabase + Claude are planned
-for Phase 2+ (see `CLAUDE.md` section 18) — not wired up yet.
+Next.js 16 (App Router, TypeScript strict, Tailwind v4), Anthropic Claude,
+Supabase Postgres and Storage, Vercel, and a QuickBooks Online sandbox adapter.
+
+## Authorship
+
+Independently designed and built by [Ariel Magalso](https://arielmagalso.com),
+an AI Automation Specialist based in the Philippines. Architecture, application
+development, evaluation design, database work, operational monitoring,
+interface, and deployment are all part of this solo portfolio build.
+
+[LinkedIn](https://www.linkedin.com/in/magalsoariel) · [GitHub](https://github.com/ArielMagalsoDev) · [Email](mailto:hello@arielmagalso.com)
 
 ## Run locally
 
@@ -55,6 +64,7 @@ npm run dev
 - `/evals` — evaluation scorecard and dataset plan
 - `/architecture` — pipeline, AI-vs-deterministic split, security, stack
 - `/operations` — aggregated audit events, latency, and cost
+- `/case-study` — recruiter-oriented project decisions, ownership, proof, and limitations
 
 ## Non-negotiables (see `CLAUDE.md` for the full list)
 

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { ImpactCalculator } from "@/components/impact-calculator";
 import { OUTCOME_META } from "@/lib/outcome";
+import { AUTHOR, PORTFOLIO_PROJECTS } from "@/lib/portfolio";
 import type { DecisionOutcome } from "@/lib/types";
 
 const PROOF_POINTS = [
@@ -47,28 +48,9 @@ const TICKER_ITEMS = ["Ready for approval", "Exception review", "Duplicate hold"
 // truthful convention the rest of this page already uses); the actual
 // current number is always one click away.
 const STATS = [
-  { value: "10/10", label: "Held-out cases passed, latest verified run" },
+  { value: "10/10", label: "Held-out cases passed; 48/50 passed across the complete labeled dataset" },
   { value: "0%", label: "Critical-control false-clearance rate" },
-  { value: "50", label: "Real eval cases run through the live pipeline" },
-];
-
-const TRILOGY = [
-  {
-    name: "Meridian Assist",
-    role: "Customer support",
-    proof: "RAG, citations, claim verification, refusal, escalation",
-  },
-  {
-    name: "SignalDesk",
-    role: "Revenue operations",
-    proof: "Enrichment, identity resolution, deterministic scoring, CRM safety",
-  },
-  {
-    name: "Ledger Guard",
-    role: "Finance operations",
-    proof: "Document extraction, financial controls, matching, approvals, accounting integration",
-    current: true,
-  },
+  { value: "50", label: "Labeled fictional evaluation cases processed by the live pipeline" },
 ];
 
 export default function Home() {
@@ -95,6 +77,43 @@ export default function Home() {
             <Link href="/evals" className="btn-pill btn-pill-outline">
               View control evaluations
             </Link>
+            <a href={AUTHOR.repository} target="_blank" rel="noopener noreferrer" className="btn-pill btn-pill-outline">
+              View source code ↗
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-rule bg-paper-raised">
+        <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
+          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
+            <div>
+              <p className="section-marker">(Project at a glance)</p>
+              <h2 className="mt-2 font-display text-3xl font-normal text-ink">Built end to end by Ariel Magalso</h2>
+              <p className="mt-3 text-sm leading-relaxed text-ink-muted">
+                I designed and implemented the workflow, data model, extraction schema, deterministic control engine,
+                evaluation harness, approval interface, operational dashboard, and deployment for this solo portfolio project.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <a href={AUTHOR.portfolio} target="_blank" rel="noopener noreferrer" className="btn-pill btn-pill-primary">View Ariel&rsquo;s portfolio ↗</a>
+                <a href={`mailto:${AUTHOR.email}`} className="btn-pill btn-pill-outline">Contact Ariel</a>
+              </div>
+            </div>
+            <dl className="grid gap-px overflow-hidden rounded-[var(--radius-card)] border border-rule bg-rule sm:grid-cols-2">
+              {[
+                ["Problem", "Manual invoice preparation is slow and financially sensitive."],
+                ["Solution", "Evidence-linked AI extraction wrapped in deterministic controls and human approval."],
+                ["Role", "Solo product design, full-stack engineering, eval design, operations, and deployment."],
+                ["Stack", "Next.js, TypeScript, Claude, Supabase Postgres, Vercel, QuickBooks sandbox adapter."],
+                ["Measured proof", "10/10 held-out cases passed; zero critical-control false clearances in the latest run."],
+                ["Boundary", "Fictional data only. The public workflow never executes a payment."],
+              ].map(([term, description]) => (
+                <div key={term} className="bg-paper-light p-5">
+                  <dt className="font-tabular text-[11px] uppercase tracking-wide text-ink-faint">{term}</dt>
+                  <dd className="mt-2 text-sm leading-relaxed text-ink">{description}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </div>
       </section>
@@ -208,10 +227,12 @@ export default function Home() {
               </tr>
             </thead>
             <tbody className="divide-y divide-rule">
-              {TRILOGY.map((row) => (
+              {PORTFOLIO_PROJECTS.map((row) => (
                 <tr key={row.name} className={row.current ? "bg-[var(--ready-bg)]" : undefined}>
                   <td className="py-3 pr-4 font-medium text-ink">
-                    {row.name}
+                    <a href={row.href} target="_blank" rel="noopener noreferrer" className="underline decoration-rule-strong underline-offset-4 hover:text-accent">
+                      {row.name} ↗
+                    </a>
                     {row.current && (
                       <span className="ml-2 rounded-full bg-ready/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ready">
                         This project
@@ -238,6 +259,20 @@ export default function Home() {
             Open the AP workbench
             <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
+        </div>
+      </section>
+
+      <section className="section-dark">
+        <div className="mx-auto flex max-w-6xl flex-col gap-5 px-5 py-14 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <div>
+            <p className="section-marker">(Open to opportunities)</p>
+            <h2 className="mt-2 font-display text-3xl font-normal text-dark-ink">Need reliable AI automation?</h2>
+            <p className="mt-2 max-w-xl text-sm text-ink-muted">I build AI-assisted workflows with measurable evaluations, deterministic safeguards, and human review where the risk demands it.</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <a href={`mailto:${AUTHOR.email}`} className="btn-pill bg-dark-ink text-ink">Contact Ariel</a>
+            <a href={AUTHOR.linkedin} target="_blank" rel="noopener noreferrer" className="btn-pill btn-pill-outline">LinkedIn ↗</a>
+          </div>
         </div>
       </section>
     </div>

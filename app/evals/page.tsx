@@ -85,10 +85,11 @@ export default async function EvalsPage() {
     <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
       <h1 className="font-display text-3xl font-semibold text-ink">Evaluations</h1>
       <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-        A real eval harness (<code className="font-tabular text-xs">npm run run-evals</code>) submits every case in{" "}
+        A real eval harness (<code className="font-tabular text-xs">npm run run-evals</code>) submits every labeled,
+        fictional case in{" "}
         <code className="font-tabular text-xs">evals/cases.ts</code> through the actual pipeline — extraction, evidence
         alignment, matching, and decision — and scores the result against labeled ground truth. What&rsquo;s below is
-        the latest real run, not a mock.
+        the latest pipeline run, not a mocked scorecard. No customer invoices are used.
       </p>
 
       {!run && (
@@ -111,6 +112,12 @@ export default async function EvalsPage() {
               over the held-out split — cases never used to tune anything. CLAUDE.md section 15: a dev-set score is
               never presented as production proof.
             </p>
+            <div className="mt-4 rounded-[var(--radius-card)] border border-rule bg-paper-raised p-5 text-sm text-ink-muted">
+              <strong className="text-ink">How to read the headline:</strong> the held-out score and complete-dataset
+              score measure different splits. The held-out cases are reserved from tuning; the overall count also
+              includes development cases. Failed field-level checks remain visible below and do not get folded into
+              the critical-control false-clearance metric.
+            </div>
             <div className="mt-4">
               <MetricsTable metrics={heldOutMetrics} caseCount={(heldOutMetrics.caseCount as number) ?? 0} />
             </div>
@@ -176,6 +183,17 @@ export default async function EvalsPage() {
                 </tbody>
               </table>
             </div>
+            {perCase.some((c) => !c.pass || c.error) && (
+              <div className="mt-5 rounded-[var(--radius-card)] border border-exception/30 bg-[var(--exception-bg)] p-5">
+                <h3 className="font-display text-lg text-ink">Failure analysis</h3>
+                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-ink-muted">
+                  The latest run contains {perCase.filter((c) => !c.pass || c.error).length} case-level failure(s).
+                  They are retained publicly instead of being removed from the dataset. Review the failed check names
+                  in the table above; remediation focuses on extraction support and evidence alignment, while
+                  deterministic financial controls continue to prevent unsupported invoices from being cleared.
+                </p>
+              </div>
+            )}
           </section>
         </>
       )}
@@ -303,7 +321,7 @@ export default async function EvalsPage() {
           </table>
         </div>
         <p className="mt-6 text-xs text-ink-faint">
-          Dev and held-out sets are separated (evals/cases.ts's assignSplits) — stratified per category, ~20% held out
+          Dev and held-out sets are separated (the assignSplits function in evals/cases.ts) — stratified per category, ~20% held out
           where a category has 5+ cases. The held-out numbers above are what CLAUDE.md section 15 means by production
           proof; dev numbers are for tuning and are shown separately, never blended into a single headline figure.
         </p>

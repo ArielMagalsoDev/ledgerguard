@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { RecruiterBar } from "@/components/recruiter-bar";
 
 // Cal Sans (display face) is imported directly in globals.css via
 // @fontsource/cal-sans — it's self-hosted OFL type, not a Google Font, so
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${plexMono.variable} ${inter.variable} h-full`}
     >
       <body className="flex min-h-full flex-col bg-paper text-ink">
+        <RecruiterBar />
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />

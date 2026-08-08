@@ -73,7 +73,11 @@ const STACK = [
   { label: "App", value: "Next.js 16 (App Router, TypeScript strict, Tailwind v4) on Vercel" },
   { label: "Data", value: "Supabase Postgres — NUMERIC money, audit events, jobs; Storage for documents with signed URLs" },
   { label: "Extraction", value: "Anthropic Claude, native PDF/vision input, tool-forced JSON schema output" },
-  { label: "Accounting integration", value: "QuickBooks Online sandbox (or equivalent) — draft bills only, idempotent, external IDs recorded" },
+  {
+    label: "Accounting integration",
+    value:
+      "QuickBooks Online sandbox adapter — draft bills only and idempotent. Public demo runs stop before external writes; Operations reports zero drafts until a sandbox write is deliberately exercised.",
+  },
 ];
 
 export default function ArchitecturePage() {

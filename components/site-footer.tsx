@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AUTHOR } from "@/lib/portfolio";
 
 const NAV = [
   { href: "/demo", label: "Demo" },
@@ -6,6 +7,7 @@ const NAV = [
   { href: "/evals", label: "Evals" },
   { href: "/architecture", label: "Architecture" },
   { href: "/operations", label: "Operations" },
+  { href: "/case-study", label: "Case study" },
 ];
 
 export function SiteFooter() {
@@ -18,10 +20,14 @@ export function SiteFooter() {
               Ledger Guard<span className="text-accent">.</span>
             </span>
             <p className="mt-3 max-w-sm text-sm text-ink-muted">
-              Built by Ariel Magalso · part of a three-project portfolio with
-              Meridian Assist (support automation) and SignalDesk (revenue
-              operations).
+              Independently designed and built by {AUTHOR.name}, an {AUTHOR.role}. Architecture, application
+              development, evaluation design, database work, interface, and deployment are part of this solo build.
             </p>
+            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+              <a href={AUTHOR.portfolio} target="_blank" rel="noopener noreferrer" className="text-dark-ink hover:text-accent">Portfolio ↗</a>
+              <a href={AUTHOR.repository} target="_blank" rel="noopener noreferrer" className="text-dark-ink hover:text-accent">Source code ↗</a>
+              <a href={`mailto:${AUTHOR.email}`} className="text-dark-ink hover:text-accent">Contact Ariel</a>
+            </div>
           </div>
           <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
             {NAV.map((item) => (
