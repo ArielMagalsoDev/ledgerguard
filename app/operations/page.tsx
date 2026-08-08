@@ -5,6 +5,8 @@ import { getOperationsSnapshot } from "@/lib/operations/metrics";
 import { OutcomeBadge } from "@/components/outcome-badge";
 import { OUTCOME_META } from "@/lib/outcome";
 import type { DecisionOutcome } from "@/lib/types";
+import { PageHero } from "@/components/page-hero";
+import { RecruiterProof } from "@/components/recruiter-proof";
 
 export const metadata: Metadata = {
   title: "Operations — Ledger Guard",
@@ -50,29 +52,49 @@ export default async function OperationsPage() {
   const m = await getOperationsSnapshot();
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
-      <h1 className="font-display text-3xl font-semibold text-ink">Operations</h1>
-      <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-        Real aggregates from every invoice the pipeline has actually processed — not the 5-scenario fixture sum this
-        page started with.
-      </p>
+    <div>
+      <PageHero
+        eyebrow="Operational evidence"
+        title={<>A workflow is not production-minded until it can be <span className="text-accent">measured, paused, retried, and audited.</span></>}
+        description={<>These are real aggregates from invoices the pipeline processed—not a fixture total. The page exposes throughput, outcome mix, backlog, exception frequency, integration health, per-invoice latency, model cost, alerts, and missing capabilities.</>}
+        actions={
+          <>
+            <Link href="/queue" className="btn-pill btn-pill-primary">Open the review backlog</Link>
+            <Link href="/evals" className="btn-pill btn-pill-outline">Inspect evaluations</Link>
+          </>
+        }
+        aside={
+          <div className="font-tabular text-xs text-ink-faint">
+            <strong className="block font-display text-4xl font-normal text-ink">{m.decidedInvoices}</strong>
+            decided invoices
+            <span className="mt-2 block">{m.totalAuditEvents} audit events · ${m.totalCostUsd.toFixed(3)} cost</span>
+          </div>
+        }
+      />
 
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="card-paper p-4">
-          <div className="font-display text-2xl font-semibold text-ink">{m.decidedInvoices}</div>
-          <div className="text-xs text-ink-faint">Invoices decided</div>
+      <section className="operations-monitor-surface border-y border-rule">
+      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
+        <div className="max-w-2xl">
+          <p className="section-marker">(Live operating snapshot)</p>
+          <h2 className="mt-2 font-display text-2xl font-normal text-ink">What the pipeline has actually done</h2>
         </div>
-        <div className="card-paper p-4">
-          <div className="font-display text-2xl font-semibold text-ink">{m.totalAuditEvents}</div>
-          <div className="text-xs text-ink-faint">Audit events recorded</div>
+
+      <div className="section-dark mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-card)] bg-dark-rule sm:grid-cols-4">
+        <div className="bg-dark-bg p-5">
+          <div className="font-display text-2xl font-semibold text-dark-ink">{m.decidedInvoices}</div>
+          <div className="text-xs text-ink-muted">Invoices decided</div>
         </div>
-        <div className="card-paper p-4">
-          <div className="font-display text-2xl font-semibold text-ink">{(m.totalLatencyMs / 1000).toFixed(1)}s</div>
-          <div className="text-xs text-ink-faint">Total processing time</div>
+        <div className="bg-dark-bg p-5">
+          <div className="font-display text-2xl font-semibold text-dark-ink">{m.totalAuditEvents}</div>
+          <div className="text-xs text-ink-muted">Audit events recorded</div>
         </div>
-        <div className="card-paper p-4">
-          <div className="font-display text-2xl font-semibold text-ink">${m.totalCostUsd.toFixed(3)}</div>
-          <div className="text-xs text-ink-faint">Total model cost</div>
+        <div className="bg-dark-bg p-5">
+          <div className="font-display text-2xl font-semibold text-dark-ink">{(m.totalLatencyMs / 1000).toFixed(1)}s</div>
+          <div className="text-xs text-ink-muted">Total processing time</div>
+        </div>
+        <div className="bg-dark-bg p-5">
+          <div className="font-display text-2xl font-semibold text-dark-ink">${m.totalCostUsd.toFixed(3)}</div>
+          <div className="text-xs text-ink-muted">Total model cost</div>
         </div>
       </div>
 
@@ -257,6 +279,13 @@ export default async function OperationsPage() {
           ))}
         </ul>
       </section>
+      </div>
+      </section>
+
+      <RecruiterProof
+        title="Operations are part of the engineering proof."
+        description="The dashboard demonstrates auditability, cost visibility, backlog ownership, integration health, retry strategy, alerts, and an explicit list of capabilities that are documented but not yet built."
+      />
     </div>
   );
 }

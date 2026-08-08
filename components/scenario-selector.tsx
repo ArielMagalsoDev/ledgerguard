@@ -11,7 +11,7 @@ export function ScenarioSelector({
   onSelect: (id: string) => void;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-5">
+    <div className="grid min-w-0 grid-flow-col auto-cols-[minmax(10.5rem,1fr)] gap-3 overflow-x-auto pb-2 md:grid-flow-row md:auto-cols-auto md:grid-cols-5 md:overflow-visible md:pb-0">
       {scenarios.map((scenario) => {
         const meta = OUTCOME_META[scenario.outcome];
         const active = scenario.id === activeId;
@@ -20,27 +20,32 @@ export function ScenarioSelector({
             key={scenario.id}
             type="button"
             onClick={() => onSelect(scenario.id)}
+            aria-pressed={active}
             className={[
-              "rounded border px-3 py-2.5 text-left transition-colors",
+              "group relative flex min-h-48 min-w-0 flex-col overflow-hidden rounded-[var(--radius-card)] border p-4 text-left transition-all",
               active
-                ? "border-ink bg-paper-raised shadow-sm"
-                : "border-rule bg-paper hover:border-rule-strong hover:bg-paper-raised/60",
+                ? "border-accent bg-paper-raised shadow-[inset_0_0_0_1px_var(--accent)]"
+                : "border-rule bg-paper-raised hover:-translate-y-0.5 hover:border-rule-strong",
             ].join(" ")}
           >
-            <div className="flex items-center justify-between">
-              <span className="font-tabular text-[10px] text-ink-faint">
-                Scenario {scenario.order}
+            {active && <span className="absolute inset-x-0 top-0 h-1.5 bg-accent" aria-hidden />}
+            <div className="flex items-start justify-between gap-3">
+              <span className={`font-tabular text-4xl font-medium leading-none tracking-tight ${active ? "text-accent" : "text-rule-strong"}`}>
+                0{scenario.order}
               </span>
-              <span
-                className="h-1.5 w-1.5 shrink-0 rounded-full"
-                style={{ backgroundColor: meta.color }}
-              />
+              <span className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: meta.color }} aria-hidden />
             </div>
-            <div className="mt-0.5 text-sm font-medium text-ink">
+            <div className="mt-7 text-base font-semibold leading-tight text-ink">
               {scenario.shortLabel}
             </div>
-            <div className="mt-0.5 truncate text-[11px] text-ink-faint">
+            <div className="mt-2 line-clamp-2 text-xs leading-relaxed text-ink-muted">
               {scenario.tagline}
+            </div>
+            <div className="mt-auto flex items-end justify-between gap-3 pt-5">
+              <span className="font-tabular text-[10px] font-medium uppercase tracking-wide" style={{ color: meta.color }}>
+                {meta.short}
+              </span>
+              <span className="text-xl leading-none text-ink-faint transition-transform group-hover:translate-x-0.5 group-hover:text-accent" aria-hidden>→</span>
             </div>
           </button>
         );

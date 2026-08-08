@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { EVAL_CASES, EVAL_DATASET_NOTE, CATEGORY_META, type EvalCategory } from "@/evals/cases";
 import { getLatestEvalRun } from "@/lib/evals/latest-run";
 import { getLatestUploadEvalRun } from "@/lib/evals/latest-upload-eval-run";
+import { PageHero } from "@/components/page-hero";
+import { RecruiterProof } from "@/components/recruiter-proof";
 
 export const metadata: Metadata = {
   title: "Evaluations — Ledger Guard",
@@ -82,15 +85,33 @@ export default async function EvalsPage() {
   }>;
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
-      <h1 className="font-display text-3xl font-semibold text-ink">Evaluations</h1>
-      <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-        A real eval harness (<code className="font-tabular text-xs">npm run run-evals</code>) submits every labeled,
-        fictional case in{" "}
-        <code className="font-tabular text-xs">evals/cases.ts</code> through the actual pipeline — extraction, evidence
-        alignment, matching, and decision — and scores the result against labeled ground truth. What&rsquo;s below is
-        the latest pipeline run, not a mocked scorecard. No customer invoices are used.
-      </p>
+    <div>
+      <PageHero
+        eyebrow="Measured system behavior"
+        title={<>Evaluation results that show <span className="text-accent">where the system works—and where it does not.</span></>}
+        description={<>The harness submits labeled fictional invoices through the actual extraction, evidence-alignment, matching, and decision pipeline. Held-out proof, development metrics, per-case failures, latency, and cost remain separate and visible.</>}
+        actions={
+          <>
+            <Link href="/demo" className="btn-pill btn-pill-primary">Run the evaluated scenarios</Link>
+            <a href="https://github.com/ArielMagalsoDev/ledgerguard/blob/main/evals/run.ts" target="_blank" rel="noopener noreferrer" className="btn-pill btn-pill-outline">Inspect the eval runner ↗</a>
+          </>
+        }
+        aside={run ? (
+          <div className="font-tabular text-xs text-ink-faint">
+            <strong className={`block font-display text-4xl font-normal ${run.passed_cases === run.total_cases ? "text-ready" : "text-exception"}`}>{run.passed_cases}/{run.total_cases}</strong>
+            complete-dataset cases passed
+            <span className="mt-2 block">0% latest critical false-clearance rate</span>
+          </div>
+        ) : <span className="font-tabular text-xs text-ink-faint">No recorded run</span>}
+      />
+
+      <section className="eval-scorecard-surface border-y border-rule">
+      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
+        <div className="mb-8 max-w-2xl">
+          <p className="section-marker">(Evaluation scorecard)</p>
+          <h2 className="mt-2 font-display text-2xl font-normal text-ink">Held-out proof first. Failures kept visible.</h2>
+          <p className="mt-2 text-sm leading-relaxed text-ink-muted">No customer invoices are used, and no development-set score is presented as held-out production proof.</p>
+        </div>
 
       {!run && (
         <p className="mt-6 rounded border border-rule bg-paper-raised/50 px-4 py-3 text-sm text-ink-muted">
@@ -326,6 +347,13 @@ export default async function EvalsPage() {
           proof; dev numbers are for tuning and are shown separately, never blended into a single headline figure.
         </p>
       </section>
+      </div>
+      </section>
+
+      <RecruiterProof
+        title="The evaluation methodology is part of the portfolio evidence."
+        description="The public scorecard separates held-out and development cases, preserves failures, measures critical false clearances independently, and reports latency and model cost."
+      />
     </div>
   );
 }

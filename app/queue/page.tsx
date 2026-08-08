@@ -7,6 +7,8 @@ import { QueueFilters } from "@/components/queue-filters";
 import { OUTCOME_META } from "@/lib/outcome";
 import { formatRoute } from "@/lib/route-labels";
 import type { DecisionOutcome } from "@/lib/types";
+import { PageHero } from "@/components/page-hero";
+import { RecruiterProof } from "@/components/recruiter-proof";
 
 export const metadata: Metadata = {
   title: "AP Review Queue — Ledger Guard",
@@ -45,14 +47,38 @@ export default async function QueuePage({
     return true;
   });
 
+  const exceptionCount = allItems.filter((item) => item.outcome === "exception_review").length;
+  const holdCount = allItems.filter((item) => item.outcome === "duplicate_hold" || item.outcome === "blocked").length;
+
   return (
-    <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
-      <h1 className="font-display text-3xl font-semibold text-ink">AP review queue</h1>
-      <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-        Every invoice that has actually been through extraction, matching, and the decision engine — real data, not
-        fixtures. Approve, reject, reassign, or comment; every action is server-checked against the invoice&rsquo;s
-        own approval route and recorded permanently.
-      </p>
+    <div>
+      <PageHero
+        eyebrow="Human review and approval control"
+        title={<>The AI prepares the work. <span className="text-accent">People retain authority.</span></>}
+        description={<>Every invoice here passed through extraction, matching, and the decision engine. Approvals, rejections, reassignment, and comments are server-checked against the invoice&rsquo;s route and recorded permanently.</>}
+        actions={
+          <>
+            <Link href="/demo" className="btn-pill btn-pill-primary">Inspect a scenario</Link>
+            <Link href="/operations" className="btn-pill btn-pill-outline">View operations</Link>
+          </>
+        }
+        aside={
+          <div className="grid grid-cols-3 gap-5 text-left lg:text-right">
+            <div><strong className="block font-display text-3xl font-normal text-ink">{allItems.length}</strong><span className="text-xs text-ink-faint">open items</span></div>
+            <div><strong className="block font-display text-3xl font-normal text-exception">{exceptionCount}</strong><span className="text-xs text-ink-faint">exceptions</span></div>
+            <div><strong className="block font-display text-3xl font-normal text-blocked">{holdCount}</strong><span className="text-xs text-ink-faint">holds / blocks</span></div>
+          </div>
+        }
+      />
+
+      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="section-marker">(Live approval backlog)</p>
+            <h2 className="mt-2 font-display text-2xl font-normal text-ink">AP review queue</h2>
+          </div>
+          <p className="max-w-md text-xs leading-relaxed text-ink-faint sm:text-right">Role checks and required verification notes are enforced on the server, not trusted from the interface.</p>
+        </div>
 
       {allItems.length === 0 && (
         <p className="mt-6 rounded border border-rule bg-paper-raised/50 px-4 py-3 text-sm text-ink-muted">
@@ -99,6 +125,12 @@ export default async function QueuePage({
           );
         })}
       </div>
+      </div>
+
+      <RecruiterProof
+        title="Human review is a product capability, not a disclaimer."
+        description="The queue demonstrates approval routing, separation of duties, verification requirements, durable comments, and audit history around model-assisted work."
+      />
     </div>
   );
 }

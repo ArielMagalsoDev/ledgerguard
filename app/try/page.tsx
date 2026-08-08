@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { UploadFlow } from "@/app/try/upload-flow";
+import { PageHero } from "@/components/page-hero";
+import { RecruiterProof } from "@/components/recruiter-proof";
 
 export const metadata: Metadata = {
   title: "Try your own invoice — Ledger Guard",
@@ -21,33 +23,36 @@ export default function TryPage() {
 
   if (!enabled) {
     return (
-      <div className="mx-auto max-w-2xl px-5 py-24 text-center sm:px-8">
-        <p className="section-marker">(Upload sandbox)</p>
-        <h1 className="mt-3 font-display text-3xl font-normal text-ink">Not available right now</h1>
-        <p className="mt-3 text-sm leading-relaxed text-ink-muted">
-          The bring-your-own-invoice sandbox is off by default and only turned on for limited windows. The five
-          seeded scenarios in the guided demo run the exact same real extraction, evidence-alignment, and control
-          pipeline — start there instead.
-        </p>
-        <Link href="/demo" className="btn-pill btn-pill-primary mt-6 inline-flex">
-          Open the guided demo
-        </Link>
+      <div>
+        <PageHero
+          eyebrow="Controlled upload boundary"
+          title={<>The public upload sandbox is <span className="text-accent">closed by default.</span></>}
+          description={<>Arbitrary document intake creates file-safety, privacy, abuse, and model-spend risk. Limited upload windows use the same extraction and control pipeline while applying a stricter policy that never allows a user document to become ready for approval.</>}
+          actions={<Link href="/demo" className="btn-pill btn-pill-primary">Open the guided demo</Link>}
+          aside={<span className="font-tabular text-xs text-ink-faint">UPLOAD_SANDBOX_ENABLED=false</span>}
+        />
+        <RecruiterProof
+          title="A closed feature can still demonstrate good product judgment."
+          description="The upload path is implemented and evaluated separately, but disabled unless the file-safety, privacy, rate-limit, deletion, and spend controls are intentionally enabled."
+        />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-5 pb-24 pt-8 sm:px-8">
-      <div className="mb-6">
-        <p className="section-marker">(Upload sandbox)</p>
-        <h1 className="mt-2 font-display text-2xl font-normal text-ink sm:text-3xl">Try your own invoice</h1>
-        <p className="mt-1 max-w-2xl text-sm text-ink-muted">
-          Upload one invoice PDF and watch Ledger Guard&rsquo;s real pipeline run on it — the same extraction,
-          evidence alignment, arithmetic checks, and control logic as the guided demo, on a document nobody prepared
-          in advance.
-        </p>
-      </div>
-      <UploadFlow />
+    <div>
+      <PageHero
+        eyebrow="Temporary upload sandbox"
+        title={<>Run an unseen invoice through the <span className="text-accent">controlled pipeline.</span></>}
+        description={<>Upload one invoice PDF and inspect extraction, evidence alignment, arithmetic, and control logic on a document not prepared as a guided scenario. Uploaded documents can never reach ready-for-approval.</>}
+        actions={<Link href="/demo" className="btn-pill btn-pill-outline">Use the guided demo instead</Link>}
+        aside={<span className="font-tabular text-xs text-ready">Sandbox open · temporary retention</span>}
+      />
+      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8"><UploadFlow /></div>
+      <RecruiterProof
+        title="The upload path proves the policy boundary generalizes."
+        description="It uses separate validation, rate limiting, temporary storage, stricter routing, deletion controls, and its own evaluation results."
+      />
     </div>
   );
 }

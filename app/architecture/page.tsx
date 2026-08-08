@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Bot, Cpu, Users } from "lucide-react";
+import { PageHero } from "@/components/page-hero";
+import { RecruiterProof } from "@/components/recruiter-proof";
 
 export const metadata: Metadata = {
   title: "Architecture — Ledger Guard",
@@ -82,13 +85,32 @@ const STACK = [
 
 export default function ArchitecturePage() {
   return (
-    <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
-      <h1 className="font-display text-3xl font-semibold text-ink">Architecture</h1>
-      <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-        Every stage below is either deterministic code, an AI model call, or a
-        human decision — and the pipeline never lets an AI call stand in for a
-        financial control.
-      </p>
+    <div>
+      <PageHero
+        eyebrow="System boundary and technical judgment"
+        title={<>AI handles document variation. <span className="text-accent">Code controls financial risk.</span></>}
+        description={<>Every pipeline stage belongs explicitly to an AI model, deterministic code, or a human reviewer. A model call never stands in for arithmetic, identity, routing, permissions, or payment authority.</>}
+        actions={
+          <>
+            <Link href="/demo" className="btn-pill btn-pill-primary">See the architecture operate</Link>
+            <Link href="/evals" className="btn-pill btn-pill-outline">View control evaluations</Link>
+          </>
+        }
+        aside={
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div><Bot className="mx-auto h-9 w-9 stroke-[1.6] text-exception" aria-hidden /><strong className="mt-2 block font-display text-2xl font-normal text-ink">2</strong><span className="text-[10px] text-ink-faint">AI stages</span></div>
+            <div><Cpu className="mx-auto h-9 w-9 stroke-[1.6] text-ready" aria-hidden /><strong className="mt-2 block font-display text-2xl font-normal text-ink">10</strong><span className="text-[10px] text-ink-faint">code stages</span></div>
+            <div><Users className="mx-auto h-9 w-9 stroke-[1.6] text-duplicate" aria-hidden /><strong className="mt-2 block font-display text-2xl font-normal text-ink">1</strong><span className="text-[10px] text-ink-faint">human stage</span></div>
+          </div>
+        }
+      />
+
+      <section className="architecture-map-surface border-y border-rule">
+      <div className="architecture-map-content mx-auto max-w-6xl px-5 py-12 sm:px-8">
+        <div className="max-w-2xl">
+          <p className="section-marker">(End-to-end responsibility map)</p>
+          <h2 className="mt-2 font-display text-2xl font-normal text-ink">Thirteen stages with an explicit owner</h2>
+        </div>
 
       {/* Pipeline */}
       <section className="mt-12">
@@ -196,6 +218,13 @@ export default function ArchitecturePage() {
           ))}
         </dl>
       </section>
+      </div>
+      </section>
+
+      <RecruiterProof
+        title="The architecture makes the model boundary inspectable."
+        description="This design demonstrates evidence alignment, decimal-safe arithmetic, identity resolution, duplicate rules, versioned tolerances, approval routing, idempotency, security boundaries, and honest integration limits."
+      />
     </div>
   );
 }

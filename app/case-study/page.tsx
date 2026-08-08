@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Code2, Mail } from "lucide-react";
 import { AUTHOR } from "@/lib/portfolio";
+import { RecruiterProof } from "@/components/recruiter-proof";
 
 export const metadata: Metadata = {
   title: "Case study — Ledger Guard",
@@ -93,6 +94,10 @@ export default function CaseStudyPage() {
           <Link href="/demo" className="btn-pill btn-pill-primary shrink-0">Open the workbench <ArrowRight className="h-4 w-4" aria-hidden /></Link>
         </div>
       </section>
+      <RecruiterProof
+        title="The case study connects design decisions to working evidence."
+        description="Continue into the live workbench, inspect the source and evaluations, or contact Ariel about AI automation and workflow-engineering opportunities."
+      />
     </div>
   );
 }

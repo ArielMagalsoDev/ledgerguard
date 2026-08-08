@@ -1,12 +1,11 @@
 import Link from "next/link";
 
 const NAV = [
+  { href: "/#overview", label: "Overview" },
   { href: "/demo", label: "Demo" },
-  { href: "/queue", label: "Queue" },
   { href: "/evals", label: "Evals" },
   { href: "/architecture", label: "Architecture" },
   { href: "/operations", label: "Operations" },
-  { href: "/case-study", label: "Case study" },
 ];
 
 // Traced from agero.framer.website's own status chip (an inline SVG, not a
@@ -61,7 +60,7 @@ export function SiteHeader() {
           </Link>
         </div>
         {/* Mobile nav — no hamburger/overlay yet, just wraps under the bar. */}
-        <nav className="flex items-center gap-1 overflow-x-auto px-5 pb-3 text-sm md:hidden">
+        <nav className="nav-scroll flex items-center gap-1 overflow-x-auto px-5 pb-3 text-sm md:hidden">
           {NAV.map((item) => (
             <Link
               key={item.href}

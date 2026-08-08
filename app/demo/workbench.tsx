@@ -12,6 +12,8 @@ import { MatchEvidencePanel } from "@/components/match-evidence-panel";
 import { ControlChecklist } from "@/components/control-checklist";
 import { ProposedActionPanel } from "@/components/proposed-action-panel";
 import { AuditTrail } from "@/components/audit-trail";
+import { PageHero } from "@/components/page-hero";
+import { RecruiterProof } from "@/components/recruiter-proof";
 
 export function Workbench({
   scenarios,
@@ -37,6 +39,7 @@ export function Workbench({
     .filter((l) => l.kind === "notes" && scenario.extracted.notes)
     .map((l) => l.id);
   const isInjectionScenario = scenario.id === "prompt-injection";
+  const liveScenarioCount = scenarios.filter((item) => item.isLive).length;
 
   function handleSelectScenario(id: string) {
     setActiveId(id);
@@ -44,19 +47,36 @@ export function Workbench({
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-5 pb-24 pt-8 sm:px-8">
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
-          AP workbench
-        </h1>
-        <p className="mt-1 max-w-2xl text-sm text-ink-muted">
-          Pick a scenario. Every field below is either read off the document
-          or computed by deterministic code — click a field to see where it
-          came from.
-        </p>
-      </div>
+    <div>
+      <PageHero
+        eyebrow="Interactive product proof"
+        title={<>One invoice. Every <span className="text-accent">field, rule, and decision</span> visible.</>}
+        description={<>Choose a scenario and inspect document evidence, deterministic controls, approval routing, latency, model cost, and audit history. Click any extracted field to trace it back to the source.</>}
+        aside={
+          <div className="font-tabular text-xs text-ink-faint">
+            <strong className="block font-display text-3xl font-normal text-ready">{liveScenarioCount}/{scenarios.length}</strong>
+            live scenario results
+            <span className="mt-2 block">policy_2026.3 · fictional data</span>
+          </div>
+        }
+        actions={
+          <>
+            <Link href="/architecture" className="btn-pill btn-pill-primary">How the controls work</Link>
+            <Link href="/evals" className="btn-pill btn-pill-outline">View evaluations</Link>
+          </>
+        }
+      />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="mx-auto max-w-6xl px-5 pb-4 pt-8 sm:px-8">
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="section-marker">(Choose a controlled scenario)</p>
+            <h2 className="mt-2 font-display text-2xl font-normal text-ink">AP workbench</h2>
+          </div>
+          <p className="max-w-lg text-xs leading-relaxed text-ink-faint sm:text-right">All suppliers, invoices, purchase orders, receipts, and amounts are fictional.</p>
+        </div>
+
+      <div>
         <ScenarioSelector
           scenarios={SCENARIOS}
           activeId={activeId}
@@ -65,10 +85,13 @@ export function Workbench({
         {uploadSandboxEnabled && (
           <Link
             href="/try"
-            className="btn-pill btn-pill-outline shrink-0 items-center gap-1.5 self-start"
+            className="mt-3 flex items-center justify-between gap-4 rounded-[var(--radius-card)] border border-dashed border-rule-strong bg-paper-raised px-5 py-4 text-sm font-medium text-ink transition-colors hover:border-accent"
           >
-            <UploadCloud className="h-3.5 w-3.5" aria-hidden />
-            Try your own invoice
+            <span>Have an invoice of your own?</span>
+            <span className="flex items-center gap-2">
+              Upload and test it
+              <UploadCloud className="h-4 w-4" aria-hidden />
+            </span>
           </Link>
         )}
       </div>
@@ -84,7 +107,7 @@ export function Workbench({
         </div>
       )}
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-y border-rule py-4">
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-card)] border border-rule bg-paper-raised px-5 py-4">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="font-display text-lg font-semibold text-ink">
@@ -154,6 +177,12 @@ export function Workbench({
         <ProposedActionPanel scenario={scenario} />
         <AuditTrail events={scenario.auditEvents} />
       </div>
+      </div>
+
+      <RecruiterProof
+        title="This demo exposes the implementation, not just the happy path."
+        description="Five scenarios demonstrate extraction provenance, arithmetic checks, matching, duplicate identity, bank-detail holds, prompt-injection handling, idempotency, and auditability."
+      />
     </div>
   );
 }
