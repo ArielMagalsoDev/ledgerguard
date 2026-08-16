@@ -14,5 +14,5 @@ AUTHOR: dict[str, str] = {
     "portfolio": "https://arielmagalso.com",
     "linkedin": "https://www.linkedin.com/in/magalsoariel",
     "github": "https://github.com/ArielMagalsoDev",
-    "repository": "https://github.com/ArielMagalsoDev/ledgerguard-python",
+    "repository": "https://github.com/ArielMagalsoDev/ledgerguard",
 }
