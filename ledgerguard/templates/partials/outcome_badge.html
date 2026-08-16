@@ -1,0 +1,19 @@
+{# Shared outcome pill.
+   Usage: {% from "partials/outcome_badge.html" import outcome_badge %}
+          {{ outcome_badge(scenario.outcome) }}
+          {{ outcome_badge(decision.outcome, size='sm') }}
+   `OUTCOME_META` is a Jinja global registered in main.py (ledgerguard/outcome.py). #}
+{% macro outcome_badge(outcome, size='md') %}
+{%- set meta = OUTCOME_META[outcome] -%}
+{%- if size == 'lg' -%}
+  {%- set size_classes = 'px-4 py-1.5 text-sm' -%}
+{%- elif size == 'sm' -%}
+  {%- set size_classes = 'px-2 py-0.5 text-[11px]' -%}
+{%- else -%}
+  {%- set size_classes = 'px-3 py-1 text-xs' -%}
+{%- endif -%}
+<span class="inline-flex items-center gap-1.5 rounded-full font-medium uppercase tracking-wide {{ size_classes }}" style="background-color: {{ meta.bg }}; color: {{ meta.color }};">
+  <span class="inline-block h-1.5 w-1.5 rounded-full" style="background-color: {{ meta.color }};"></span>
+  {{ meta.label }}
+</span>
+{%- endmacro %}

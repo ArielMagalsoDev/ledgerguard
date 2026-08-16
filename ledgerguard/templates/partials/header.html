@@ -1,0 +1,86 @@
+{% macro hover_label(label) %}<span class="label-swap" aria-label="{{ label }}"><span aria-hidden="true">{{ label }}</span><span aria-hidden="true">{{ label }}</span></span>{% endmacro %}
+
+{% set primary_nav = [
+  {"href": "/demo", "label": "Demo"},
+  {"href": "/case-study", "label": "Case Study"}
+] %}
+{% set evidence_nav = [
+  {"href": "/queue", "label": "Review queue"},
+  {"href": "/evals", "label": "Evaluations"},
+  {"href": "/architecture", "label": "Architecture"},
+  {"href": "/operations", "label": "Operations"}
+] %}
+{% set try_nav = [{"href": "/try", "label": "Try your own invoice"}] if upload_sandbox_enabled else [] %}
+{% set external_nav = [{"href": AUTHOR.repository, "label": "GitHub", "external": true}] %}
+{% set mobile_nav = primary_nav + evidence_nav + try_nav + external_nav %}
+
+{% macro is_active(href) %}{% if href == '/' %}{{ 'is-active' if request.url.path == '/' else '' }}{% else %}{{ 'is-active' if request.url.path.startswith(href) else '' }}{% endif %}{% endmacro %}
+
+<header class="editorial-header">
+  <div class="editorial-header-inner">
+    <nav aria-label="Primary navigation" class="hidden items-center gap-7 lg:flex">
+      {% for item in primary_nav %}
+      <a href="{{ item.href }}" class="editorial-nav-link {{ is_active(item.href) }}">{{ hover_label(item.label) }}</a>
+      {% endfor %}
+    </nav>
+
+    <a href="/" class="editorial-wordmark" aria-label="LedgerGuard home">LedgerGuard<span>.</span></a>
+
+    <nav aria-label="Secondary navigation" class="ml-auto hidden items-center gap-7 lg:flex">
+      <div data-evidence-menu class="evidence-menu">
+        <button
+          type="button"
+          id="evidence-toggle"
+          class="editorial-nav-link inline-flex items-center gap-1"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          {{ hover_label("Evidence") }}
+          <svg id="evidence-chevron" class="h-3.5 w-3.5 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div id="evidence-panel" class="evidence-menu-panel hidden" role="menu">
+          {% for item in evidence_nav %}
+          <a href="{{ item.href }}" role="menuitem" class="evidence-menu-link">{{ item.label }}</a>
+          {% endfor %}
+          {% if upload_sandbox_enabled %}
+          <a href="/try" role="menuitem" class="evidence-menu-link">Try your own invoice</a>
+          {% endif %}
+        </div>
+      </div>
+      {% for item in external_nav %}
+      <a href="{{ item.href }}" target="_blank" rel="noopener noreferrer" class="editorial-nav-link">{{ hover_label(item.label) }}</a>
+      {% endfor %}
+    </nav>
+
+    <button
+      type="button"
+      id="mobile-menu-button"
+      class="ml-auto grid h-11 w-11 place-items-center lg:hidden"
+      aria-expanded="false"
+      aria-controls="mobile-navigation"
+      aria-label="Open navigation"
+    >
+      <svg id="nav-icon-menu" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+      <svg id="nav-icon-close" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+
+    <!-- lg:flex, not sm:flex — sm:flex showed this alongside the hamburger
+         (visible below lg) from 640-1023px, crowding the header. Now it
+         only appears once the hamburger disappears and the full desktop
+         nav takes over. -->
+    <a href="mailto:{{ AUTHOR.email }}" class="contact-tab hidden lg:flex">{{ hover_label("Contact Ariel") }}</a>
+  </div>
+
+  <div id="mobile-navigation" class="mobile-navigation hidden lg:hidden">
+    <nav aria-label="Mobile navigation" class="flex flex-col">
+      {% for item in mobile_nav %}
+        {% if item.external %}
+        <a href="{{ item.href }}" target="_blank" rel="noopener noreferrer" class="mobile-nav-link">{{ item.label }}<span aria-hidden="true">↗</span></a>
+        {% else %}
+        <a href="{{ item.href }}" class="mobile-nav-link">{{ item.label }}<span aria-hidden="true">→</span></a>
+        {% endif %}
+      {% endfor %}
+    </nav>
+    <a href="mailto:{{ AUTHOR.email }}" class="mobile-contact-link">Contact Ariel →</a>
+  </div>
+</header>

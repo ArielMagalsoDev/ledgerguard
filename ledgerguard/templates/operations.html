@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% from "partials/page_hero.html" import page_hero %}
+{% from "partials/recruiter_proof.html" import recruiter_proof %}
+{% from "partials/outcome_badge.html" import outcome_badge %}
+
+{% block title %}Operations — LedgerGuard{% endblock %}
+{% block meta_description %}Audit events, retries, latency, and cost.{% endblock %}
+
+{% block content %}
+{#
+  ALERTS / DEFERRED_ALERTS / OPERATIONAL_CONTROLS / NOT_YET_BUILT — static
+  content defined inline.
+#}
+{% set alerts = [
+  {"title": "Critical bank-detail change detected", "detail": "Fires the moment a bank_detail_change control fails — see Scenario 4."},
+  {"title": "Duplicate accounting write attempted", "detail": "Fires if a replayed submissionId or idempotency key ever reaches the accounting integration."},
+  {"title": "OCR or model cost exceeds daily limit", "detail": "Wired to the same race-safe daily spend-cap ledger used across the portfolio."},
+] %}
+{% set deferred_alerts = [
+  "Accounting-integration authentication failure",
+  "Extraction-failure-rate threshold exceeded",
+  "Monetary-correction-rate increase",
+  "Exception-backlog SLA breach",
+  "Workflow stuck beyond expected duration",
+  "Evaluation regression crosses a release threshold",
+] %}
+{% set operational_controls = [
+  "Pause accounting writes independently from extraction.",
+  "Disable a failing OCR or model provider.",
+  "Reprocess a workflow from its last successful stage.",
+  "Version extraction prompts, schemas, rules, and models — display the version behind every decision.",
+  "Replay dead-lettered jobs after remediation.",
+  "Require dual approval to change critical controls (documented; single-operator in this demo).",
+] %}
+{% set not_yet_built = [
+  "Extraction confidence trended by field (needs a rolling baseline this project doesn't keep yet).",
+  "Supplier and document-layout drift detection (same — needs historical trend data, not a single snapshot).",
+] %}
+{% set decision_outcomes = ["ready_for_approval", "exception_review", "duplicate_hold", "blocked"] %}
+
+{% set hero_title %}A workflow is not production-minded <span class="hero-halftone block">until it can be measured, paused, retried, and audited.</span>{% endset %}
+{% set hero_description %}These are real aggregates from invoices the pipeline processed—not a fixture total. The page exposes throughput, outcome mix, backlog, exception frequency, integration health, per-invoice latency, model cost, alerts, and missing capabilities.{% endset %}
+{% set hero_actions %}
+<a href="/queue" class="btn-pill btn-pill-primary">Open the review backlog</a>
+<a href="/evals" class="btn-pill btn-pill-outline">Inspect evaluations</a>
+{% endset %}
+{% set hero_aside %}
+<div class="font-tabular text-xs text-ink-faint">
+  <strong class="block font-display text-4xl font-normal text-ink">{{ decidedInvoices }}</strong>
+  decided invoices
+  <span class="mt-2 block">{{ totalAuditEvents }} audit events · ${{ "%.3f"|format(totalCostUsd) }} cost</span>
+</div>
+{% endset %}
+
+<div>
+{{ page_hero(visual="operations", eyebrow="Operational evidence", compact=true, title=hero_title, description=hero_description, actions=hero_actions, aside=hero_aside) }}
+
+<section class="operations-monitor-surface border-y border-rule">
+<div class="editorial-shell py-14 sm:py-20">
+  <div class="max-w-2xl">
+    <p class="section-marker">Live operating snapshot</p>
+    <h2 class="display-lg mt-3 text-ink">What the pipeline has actually done</h2>
+  </div>
+
+  <div class="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-card)] border border-rule bg-rule sm:grid-cols-4">
+    <div class="bg-paper-raised p-5">
+      <div class="font-display text-3xl font-normal text-ink">{{ decidedInvoices }}</div>
+      <div class="text-xs text-ink-muted">Invoices decided</div>
+    </div>
+    <div class="bg-paper-raised p-5">
+      <div class="font-display text-3xl font-normal text-ink">{{ totalAuditEvents }}</div>
+      <div class="text-xs text-ink-muted">Audit events recorded</div>
+    </div>
+    <div class="bg-paper-raised p-5">
+      <div class="font-display text-3xl font-normal text-ink">{{ "%.1f"|format(totalLatencyMs / 1000) }}s</div>
+      <div class="text-xs text-ink-muted">Total processing time</div>
+    </div>
+    <div class="bg-paper-raised p-5">
+      <div class="font-display text-3xl font-normal text-ink">${{ "%.3f"|format(totalCostUsd) }}</div>
+      <div class="text-xs text-ink-muted">Total model cost</div>
+    </div>
+  </div>
+
+  <section class="mt-12">
+    <h2 class="font-display text-2xl font-normal text-ink">Invoices by state</h2>
+    <div class="mt-4 flex flex-wrap gap-3">
+      {% for row in invoicesByStatus %}
+      <div class="card-paper flex items-center gap-2 px-3 py-2">
+        <span class="font-tabular text-lg font-semibold text-ink">{{ row.count }}</span>
+        <span class="text-xs text-ink-faint">{{ row.status.replace("_", " ") }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="mt-2 text-xs text-ink-faint">
+      {{ totalInvoices }} total invoice row(s) — {{ totalInvoices - decidedInvoices }} are seeded historical/duplicate-detection
+      data that never entered the decision pipeline (see /queue).
+    </p>
+  </section>
+
+  <section class="mt-12">
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-rule-strong pb-2">
+      <h2 class="font-display text-2xl font-normal text-ink">Duplicate detection &amp; approval backlog</h2>
+    </div>
+    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div class="card-paper p-4">
+        <div class="font-display text-2xl font-normal text-ink">
+          {{ duplicateHoldsConfirmed }} / {{ duplicateCandidatesFound }}
+        </div>
+        <div class="text-xs text-ink-faint">Confirmed duplicate holds / invoices with any candidate signal</div>
+      </div>
+      <div class="card-paper p-4">
+        <div class="font-display text-2xl font-normal text-ink">{{ "%.0f"|format(humanCorrectionRate * 100) }}%</div>
+        <div class="text-xs text-ink-faint">Human correction rate (decided invoices with a field correction)</div>
+      </div>
+      <div class="card-paper p-4">
+        <div class="font-display text-2xl font-normal text-ink">{{ approvalBacklog|length }}</div>
+        <div class="text-xs text-ink-faint">Open in the approval backlog right now</div>
+      </div>
+    </div>
+    {% if approvalBacklog|length > 0 %}
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full min-w-[420px] text-left text-sm">
+        <thead>
+          <tr class="text-[11px] uppercase tracking-wide text-ink-faint">
+            <th class="pb-2 pr-4 font-medium">Invoice</th>
+            <th class="pb-2 pr-4 font-medium">Outcome</th>
+            <th class="pb-2 text-right font-medium">Age</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-rule">
+          {% for b in approvalBacklog[:10] %}
+          <tr>
+            <td class="py-2 pr-4">
+              <a href="/queue" class="font-medium text-ink underline decoration-rule-strong underline-offset-2 hover:decoration-ink">{{ b.invoiceNumber or b.invoiceId[:8] }}</a>
+            </td>
+            <td class="py-2 pr-4">{% if b.outcome in decision_outcomes %}{{ outcome_badge(b.outcome, size="sm") }}{% endif %}</td>
+            <td class="py-2 text-right font-tabular text-ink-muted">{{ "%.1f"|format(b.ageHours) }}h</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </section>
+
+  {% if exceptionsByControl|length > 0 %}
+  <section class="mt-12">
+    <h2 class="font-display text-2xl font-normal text-ink">Exception frequency by control</h2>
+    <div class="mt-4 space-y-2">
+      {% for c in exceptionsByControl %}
+      <div class="flex items-center justify-between gap-3 border-b border-rule pb-2 text-sm">
+        <span class="text-ink-muted">{{ c.label }}</span>
+        <span class="font-tabular font-medium text-ink">{{ c.count }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="mt-12">
+    <h2 class="font-display text-2xl font-normal text-ink">Integration health</h2>
+    <div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div class="card-paper p-4">
+        <div class="font-display text-2xl font-normal text-ink">{{ accountingCreated }}</div>
+        <div class="text-xs text-ink-faint">Draft bills created (accounting sandbox)</div>
+      </div>
+      <div class="card-paper p-4">
+        <div class="font-display text-2xl font-normal text-ink">{{ accountingFailures }}</div>
+        <div class="text-xs text-ink-faint">Accounting-write failures</div>
+      </div>
+      <div class="card-paper p-4">
+        <div class="font-display text-2xl font-normal text-ink">{{ jobFailures.transient }}</div>
+        <div class="text-xs text-ink-faint">Jobs retrying (transient failure)</div>
+      </div>
+      <div class="card-paper p-4">
+        <div class="font-display text-2xl font-normal text-ink">{{ jobFailures.permanent }}</div>
+        <div class="text-xs text-ink-faint">Jobs dead-lettered (permanent failure)</div>
+      </div>
+    </div>
+  </section>
+
+  {% if perInvoice|length > 0 %}
+  <section class="mt-12">
+    <h2 class="font-display text-2xl font-normal text-ink">Per-invoice summary</h2>
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full min-w-[560px] text-left text-sm">
+        <thead>
+          <tr class="text-[11px] uppercase tracking-wide text-ink-faint">
+            <th class="pb-2 pr-4 font-medium">Invoice</th>
+            <th class="pb-2 pr-4 font-medium">Outcome</th>
+            <th class="pb-2 pr-4 text-right font-medium">Events</th>
+            <th class="pb-2 pr-4 text-right font-medium">Latency</th>
+            <th class="pb-2 text-right font-medium">Cost</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-rule">
+          {% for s in perInvoice[:25] %}
+          <tr>
+            <td class="py-2.5 pr-4 font-tabular text-ink">{{ s.invoiceNumber or s.workflowId[:8] }}</td>
+            <td class="py-2.5 pr-4">{% if s.outcome in decision_outcomes %}{{ outcome_badge(s.outcome, size="sm") }}{% endif %}</td>
+            <td class="py-2.5 pr-4 text-right font-tabular text-ink-muted">{{ s.events }}</td>
+            <td class="py-2.5 pr-4 text-right font-tabular text-ink-muted">{{ "%.1f"|format(s.latencyMs / 1000) }}s</td>
+            <td class="py-2.5 text-right font-tabular text-ink-muted">${{ "%.4f"|format(s.costUsd) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if perInvoice|length > 25 %}
+    <p class="mt-2 text-xs text-ink-faint">Showing the 25 most recent of {{ perInvoice|length }} decided invoices.</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <section class="mt-14">
+    <h2 class="font-display text-2xl font-normal text-ink">Alerts — live in v1</h2>
+    <ul class="mt-4 space-y-3">
+      {% for alert in alerts %}
+      <li class="flex gap-3">
+        <span class="mt-0.5 h-4 w-4 shrink-0 text-blocked" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        </span>
+        <div>
+          <div class="text-sm font-medium text-ink">{{ alert.title }}</div>
+          <div class="text-xs text-ink-muted">{{ alert.detail }}</div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    <h3 class="mt-6 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">
+      Production-documented, not built in v1
+    </h3>
+    <ul class="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+      {% for a in deferred_alerts %}
+      <li class="text-xs text-ink-faint">
+        · {{ a }}
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="mt-14">
+    <h2 class="font-display text-2xl font-normal text-ink">Operational controls</h2>
+    <ul class="mt-4 space-y-2">
+      {% for c in operational_controls %}
+      <li class="flex gap-2.5 text-sm text-ink-muted">
+        <span class="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-ink-faint"></span>
+        {{ c }}
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="mt-14 mb-8">
+    <h2 class="font-display text-2xl font-normal text-ink">Not yet built on this dashboard</h2>
+    <ul class="mt-4 space-y-2">
+      {% for c in not_yet_built %}
+      <li class="flex gap-2.5 text-sm text-ink-muted">
+        <span class="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-ink-faint"></span>
+        {{ c }}
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+</section>
+
+{{ recruiter_proof(title="Operations are part of the engineering proof.", description="The dashboard demonstrates auditability, cost visibility, backlog ownership, integration health, retry strategy, alerts, and an explicit list of capabilities that are documented but not yet built.") }}
+</div>
+{% endblock %}

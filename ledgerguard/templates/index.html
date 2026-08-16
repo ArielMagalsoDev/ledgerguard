@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+{% from "partials/escalation_strip.html" import escalation_strip %}
+
+{% block title %}Ariel Magalso — AI Engineer | LedgerGuard{% endblock %}
+{% block meta_description %}Recruiter portfolio for Ariel Magalso, an AI Engineer building measurable, evidence-linked workflows with deterministic safeguards and human review.{% endblock %}
+
+{% block content %}
+{% set project_facts = [
+  ("Problem", "Manual invoice preparation is repetitive, slow, and financially sensitive."),
+  ("Solution", "Evidence-linked AI extraction wrapped in deterministic controls and human approval."),
+  ("My role", "Solo product design, full-stack engineering, evaluation, operations, and deployment."),
+  ("Stack", "FastAPI, PostgreSQL, Claude, Docker, and a QuickBooks-style sandbox adapter."),
+  ("Safety boundary", "The workflow prepares work for review; it never authorizes payment."),
+  ("Inspectable proof", "Live demo, evaluations, architecture, operations, and source code are public.")
+] %}
+{% set services = [
+  {"title": "Evidence alignment", "body": "Every extracted value links to the exact document text that supports it. Unsupported values become uncertain instead of silently verified.", "href": "/architecture", "icon": "file-search"},
+  {"title": "Financial controls", "body": "Decimal-safe code recalculates totals, compares purchase orders and receipts, and applies versioned tolerances.", "href": "/architecture", "icon": "code-2"},
+  {"title": "Duplicate prevention", "body": "Normalized supplier and invoice identity catches renamed rescans that file hashes alone would miss.", "href": "/demo", "icon": "git-branch"},
+  {"title": "Human approval", "body": "Code controls routing; people retain authority. Bank changes always require out-of-band verification.", "href": "/queue", "icon": "shield-check"}
+] %}
+{% set process = [
+  {"number": "01", "title": "Extract", "owner": "AI", "body": "Read variable document layouts and propose structured fields."},
+  {"number": "02", "title": "Verify", "owner": "Code", "body": "Align evidence, recalculate money, match identities, and detect duplicates."},
+  {"number": "03", "title": "Route", "owner": "Code", "body": "Assign a controlled outcome and the right reviewer using explicit policy."},
+  {"number": "04", "title": "Review", "owner": "Human", "body": "Inspect evidence, correct fields, and approve or reject the prepared work."}
+] %}
+{% set faq = [
+  {"q": "Is any of this real money or real supplier data?", "a": "No. Keystone Facilities Group, every supplier, invoice, and dollar figure is fictional. The public workflow cannot execute a payment or accounting write."},
+  {"q": "What does the AI actually decide?", "a": "Nothing financial. The model proposes document data; deterministic code decides whether it satisfies financial controls, and humans approve."},
+  {"q": "How is the system evaluated?", "a": "A labeled fictional dataset runs through the real pipeline. Held-out proof, development metrics, per-case failures, latency, and cost remain separate and public."},
+  {"q": "Can I inspect the implementation?", "a": "Yes. The guided workbench, architecture, evaluation runner, operational evidence, and source code are all linked from this site."}
+] %}
+
+<div class="home-page">
+  <section id="overview" class="hero-editorial overflow-hidden">
+    <div class="editorial-shell relative min-h-[700px] pb-24 pt-36 sm:pt-44 lg:min-h-[760px]">
+      <div class="reveal text-center" data-reveal>
+        <p class="section-marker">Ariel Magalso · AI Engineer · Philippines · Remote</p>
+      </div>
+
+      <h1 class="hero-title relative z-[2] mx-auto mt-14 max-w-[1280px] text-center font-display font-medium text-ink">
+        <span class="hero-line">AI Engineer</span>
+        <span class="hero-halftone hero-line">designing reliable workflows</span>
+        <span class="hero-line">from model output to human review.</span>
+      </h1>
+
+      <div class="reveal hero-intro relative z-20 mx-auto mt-10 max-w-2xl text-center sm:mt-12" data-reveal data-reveal-delay="260">
+        <p class="text-base leading-relaxed text-ink-muted sm:text-lg">
+          I independently design, build, evaluate, and deploy AI-assisted systems with evidence-linked outputs,
+          deterministic safeguards, operational visibility, and human authority where risk demands it.
+        </p>
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-4">
+          <a href="/case-study" class="btn-pill btn-pill-primary">
+            Review the case study <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+          <a href="/demo" class="btn-pill btn-pill-outline">
+            Run the project demo <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+          <a href="mailto:{{ AUTHOR.email }}" class="inline-flex items-center gap-2 text-sm font-semibold hover:opacity-55">
+            Contact Ariel <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-capabilities" aria-label="Core capabilities">
+        <span class="floating-capability capability-a">End-to-end ownership</span>
+        <span class="floating-capability capability-b">Full-stack implementation</span>
+        <span class="floating-capability capability-c">Evaluation &amp; operations</span>
+        <span class="floating-capability capability-d">Remote · Philippines</span>
+      </div>
+
+      <div class="ledger-object" aria-hidden="true">
+        <div class="ledger-object-glow"></div>
+        <div class="ledger-object-sheet ledger-object-sheet-back"></div>
+        <div class="ledger-object-sheet ledger-object-sheet-front">
+          <div class="ledger-object-bar">
+            <span>LG / 001</span>
+            <span>CONTROLLED</span>
+          </div>
+          <div class="ledger-object-lines">
+            <i></i><i></i><i></i><i></i>
+          </div>
+          <div class="ledger-object-total">
+            <span>Evidence aligned</span>
+            <strong>5 / 5</strong>
+          </div>
+        </div>
+        <div class="ledger-object-seal">Human review</div>
+        <span class="ledger-object-dot dot-a"></span>
+        <span class="ledger-object-dot dot-b"></span>
+        <span class="ledger-object-dot dot-c"></span>
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="Measured project proof" class="home-proof-section section-hairline">
+    <div class="home-proof-grid editorial-shell grid grid-cols-2 gap-3 py-5 sm:gap-4 lg:grid-cols-4 lg:py-8">
+      {% for stat in stats %}
+      <div class="reveal home-proof-card home-proof-card-{{ loop.index }}" data-reveal data-reveal-delay="{{ loop.index0 * 70 }}">
+        <p class="font-display text-[clamp(3.25rem,6vw,6rem)] font-medium leading-none tracking-[-0.065em] text-ink">{{ stat.value }}</p>
+        <p class="mt-4 text-sm font-semibold text-ink">{{ stat.label }}</p>
+        <p class="mt-1 font-tabular text-[11px] leading-relaxed text-ink-faint">{{ stat.note }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section aria-label="Project at a glance" class="section-pad section-tight-bottom">
+    <div class="editorial-shell grid gap-10 lg:grid-cols-[0.7fr_1.3fr]">
+      <div>
+        <div class="reveal" data-reveal><p class="section-marker">Recruiter snapshot</p></div>
+        <div class="reveal" data-reveal data-reveal-delay="100"><h2 class="display-xl mt-8 max-w-lg">What I owned, how I built it, and where the proof lives.</h2></div>
+      </div>
+      <div class="grid gap-0 border-y border-rule sm:grid-cols-2">
+        {% for label, body in project_facts %}
+        <div class="border-b border-rule py-6 sm:px-6 {{ 'sm:border-l' if loop.index0 % 2 == 1 else 'sm:pl-0' }} {{ 'sm:border-b-0' if loop.index0 >= project_facts|length - 2 else '' }}">
+          <p class="font-tabular text-[11px] uppercase tracking-[0.12em] text-ink-faint">{{ label }}</p>
+          <p class="mt-3 max-w-sm text-sm leading-relaxed text-ink-muted">{{ body }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad">
+    <div class="editorial-shell grid gap-12 lg:grid-cols-[0.65fr_1.35fr]">
+      <div class="reveal" data-reveal>
+        <p class="section-marker">How the system stays safe</p>
+      </div>
+      <p class="display-statement max-w-5xl" data-word-reveal="The model proposes document data. Deterministic code decides whether the evidence satisfies financial controls. People retain authority over every approval."></p>
+      <div class="flex flex-wrap gap-x-6 gap-y-3 lg:col-start-2">
+        <a href="/architecture" class="inline-flex items-center gap-2 text-sm font-semibold hover:opacity-55">
+          See the responsibility map <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+        <a href="/evals" class="inline-flex items-center gap-2 text-sm font-semibold hover:opacity-55">
+          Inspect evaluations <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+        <a href="/operations" class="inline-flex items-center gap-2 text-sm font-semibold hover:opacity-55">
+          View operating evidence <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="px-4 sm:px-5">
+    <div class="mx-auto max-w-[1440px] overflow-hidden rounded-[32px] border border-rule bg-paper-raised text-ink shadow-[0_24px_70px_-56px_rgba(19,19,22,.55)]">
+      <div class="grid gap-12 px-6 py-14 sm:px-10 sm:py-20 lg:grid-cols-[1.2fr_0.8fr] lg:px-16 lg:py-24">
+        <div>
+          <p class="font-tabular text-xs uppercase tracking-[0.12em] text-ink-faint">Featured scenario · LedgerGuard demo</p>
+          <h2 class="display-xl mt-8 max-w-4xl text-ink">A clean match should be boring—and completely inspectable.</h2>
+          <div class="mt-9 flex flex-wrap gap-3">
+            {% for outcome in outcome_order %}
+            <span class="rounded-full border border-rule-strong px-3 py-1.5 text-xs text-ink-muted">{{ OUTCOME_META[outcome].label }}</span>
+            {% endfor %}
+          </div>
+          <a href="/demo" class="btn-pill accent-panel mt-10">
+            See the project <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+        </div>
+        <div class="flex flex-col justify-end gap-10">
+          <p class="max-w-2xl text-base leading-relaxed text-ink-muted">
+            The system extracts a Brightway invoice, aligns every field to evidence, recalculates the money,
+            matches the purchase order and receipt, checks identity and duplicates, then prepares a draft for a human.
+          </p>
+          <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-1">
+            <div class="border-t border-rule pt-6">
+              <p class="font-display text-6xl font-medium tracking-[-0.06em] text-ink">5/5</p>
+              <p class="mt-2 text-sm text-ink-muted">Deterministic controls visible</p>
+            </div>
+            <div class="border-t border-rule pt-6">
+              <p class="font-display text-6xl font-medium tracking-[-0.06em] text-ink">$0</p>
+              <p class="mt-2 text-sm text-ink-muted">Payment authority in the public workflow</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="controls" class="section-pad section-hairline">
+    <div class="editorial-shell">
+      <div class="grid gap-8 lg:grid-cols-[0.7fr_1.3fr]">
+        <div class="reveal" data-reveal><p class="section-marker">Under the hood</p></div>
+        <div class="reveal" data-reveal data-reveal-delay="100"><h2 class="display-xl max-w-4xl">Controls that make the AI useful.</h2></div>
+      </div>
+      <div class="mt-16">
+        {% for service in services %}
+        <div class="reveal" data-reveal data-reveal-delay="{{ loop.index0 * 70 }}">
+          <a href="{{ service.href }}" class="service-row group grid gap-6 border-t border-rule py-8 sm:grid-cols-[80px_1fr_1.2fr_auto] sm:items-center">
+            <span class="font-tabular text-sm text-ink-faint">0{{ loop.index }}</span>
+            <h3 class="font-display text-2xl font-medium tracking-[-0.04em] sm:text-3xl">{{ service.title }}</h3>
+            <p class="text-sm leading-relaxed text-ink-muted">{{ service.body }}</p>
+            {% if service.icon == "file-search" %}
+            <svg class="h-8 w-8 stroke-[1.35] text-ink transition-transform group-hover:rotate-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22h9"/><path d="M4 2h9l5 5v3.5"/><path d="M4 2v20"/><circle cx="15.5" cy="15.5" r="3.5"/><path d="m19.5 19.5 2.5 2.5"/></svg>
+            {% elif service.icon == "code-2" %}
+            <svg class="h-8 w-8 stroke-[1.35] text-ink transition-transform group-hover:rotate-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+            {% elif service.icon == "git-branch" %}
+            <svg class="h-8 w-8 stroke-[1.35] text-ink transition-transform group-hover:rotate-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+            {% elif service.icon == "shield-check" %}
+            <svg class="h-8 w-8 stroke-[1.35] text-ink transition-transform group-hover:rotate-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+            {% endif %}
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad section-hairline">
+    <div class="editorial-shell">
+      <div class="grid gap-8 lg:grid-cols-[0.7fr_1.3fr]">
+        <div class="reveal" data-reveal><p class="section-marker">Process</p></div>
+        <div class="reveal" data-reveal data-reveal-delay="100"><h2 class="display-xl max-w-4xl">From variable document to controlled review.</h2></div>
+      </div>
+      <div class="mt-16 grid border-y border-rule md:grid-cols-4">
+        {% for step in process %}
+        <article class="border-b border-rule py-8 md:border-b-0 md:border-r md:px-6 md:first:pl-0 md:last:border-r-0">
+          <div class="flex items-center justify-between gap-4">
+            <span class="font-tabular text-sm text-ink-faint">{{ step.number }}</span>
+            <span class="rounded-full bg-paper-raised px-3 py-1 font-tabular text-[10px] uppercase">{{ step.owner }}</span>
+          </div>
+          <h3 class="mt-12 font-display text-3xl font-medium tracking-[-0.045em]">{{ step.title }}</h3>
+          <p class="mt-4 text-sm leading-relaxed text-ink-muted">{{ step.body }}</p>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section id="ownership" class="section-pad section-hairline">
+    <div class="editorial-shell grid gap-12 lg:grid-cols-[0.7fr_1.3fr]">
+      <div>
+        <div class="reveal" data-reveal><p class="section-marker">About the builder</p></div>
+        <p class="mt-8 font-tabular text-sm uppercase leading-relaxed tracking-[0.12em] text-ink-faint sm:text-base">Ariel Magalso<br>AI Engineer<br>Philippines · Remote</p>
+      </div>
+      <div>
+        <div class="reveal" data-reveal data-reveal-delay="100">
+          <h2 class="display-lg max-w-4xl">One builder across product, AI, controls, evaluation, and deployment.</h2>
+          <p class="mt-7 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">
+            I independently designed the workflow, data model, extraction schema, deterministic control engine,
+            approval experience, evaluation harness, operational dashboard, and deployment.
+          </p>
+        </div>
+        <div class="mt-10 grid gap-3 sm:grid-cols-2">
+          {% for item in ["Product and workflow design", "Full-stack implementation", "Evaluation and failure analysis", "Database, operations, and deployment"] %}
+          <div class="flex items-center gap-3 border-t border-rule py-4 text-sm">
+            <svg class="h-4 w-4 text-ready" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+            {{ item }}
+          </div>
+          {% endfor %}
+        </div>
+        <div class="mt-8 flex flex-wrap gap-5">
+          <a href="{{ AUTHOR.portfolio }}" target="_blank" rel="noopener noreferrer" class="btn-pill btn-pill-primary">View portfolio <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a>
+          <a href="mailto:{{ AUTHOR.email }}" class="inline-flex items-center gap-2 text-sm font-semibold">Contact Ariel <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="impact" class="section-pad section-hairline">
+    <div class="editorial-shell">
+      <div class="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
+        <div class="reveal" data-reveal><p class="section-marker">Illustrative business case</p></div>
+        <div class="reveal" data-reveal data-reveal-delay="100">
+          <h2 class="display-xl max-w-4xl">Explore the operating model—not a customer claim.</h2>
+          <p class="mt-5 max-w-2xl text-sm leading-relaxed text-ink-muted">Adjust the fictional inputs to understand the potential workflow effect. These values are intentionally separated from measured technical results.</p>
+        </div>
+      </div>
+      <div class="mt-12">
+        {% include "partials/impact_calculator.html" %}
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad section-hairline section-tight-bottom">
+    <div class="editorial-shell grid gap-12 lg:grid-cols-[0.7fr_1.3fr]">
+      <div>
+        <div class="reveal" data-reveal><p class="section-marker">FAQ</p></div>
+        <div class="reveal" data-reveal data-reveal-delay="100"><h2 class="mt-8 display-xl max-w-lg">The important questions, answered directly.</h2></div>
+      </div>
+      <div>
+        {% for item in faq %}
+        <div class="border-t border-rule last:border-b" data-accordion>
+          <button type="button" data-accordion-trigger aria-expanded="{{ 'true' if loop.index0 == 0 else 'false' }}" class="flex w-full items-center justify-between gap-6 py-5 text-left sm:py-6">
+            <span class="font-display text-lg font-medium text-ink sm:text-xl">{{ item.q }}</span>
+            <span data-accordion-icon aria-hidden="true" class="text-2xl font-light leading-none text-ink transition-transform duration-300" style="transform: {{ 'rotate(45deg)' if loop.index0 == 0 else 'none' }}">+</span>
+          </button>
+          <div data-accordion-panel style="display: grid; grid-template-rows: {{ '1fr' if loop.index0 == 0 else '0fr' }}; transition: grid-template-rows 0.4s cubic-bezier(0.22,1,0.36,1);">
+            <div class="overflow-hidden">
+              <div class="max-w-2xl pb-6 text-sm leading-relaxed text-ink-muted">{{ item.a }}</div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  {{ escalation_strip(projects, "ledgerguard", escalation_metric) }}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/impact.js"></script>
+{% endblock %}

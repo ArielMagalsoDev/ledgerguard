@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% from "partials/page_hero.html" import page_hero %}
+{% from "partials/recruiter_proof.html" import recruiter_proof %}
+{% from "partials/outcome_badge.html" import outcome_badge %}
+{% block title %}Try your own invoice — LedgerGuard{% endblock %}
+{% block meta_description %}Upload one invoice PDF and see LedgerGuard's real extraction, evidence alignment, and controls run on it — a temporary, sandboxed demonstration.{% endblock %}
+{% block content %}
+<div>
+  {{ page_hero(
+    visual="upload",
+    eyebrow="Temporary upload sandbox",
+    compact=true,
+    title='Run an unseen invoice through the <span class="hero-halftone block">controlled pipeline.</span>',
+    description="Upload one invoice PDF and inspect extraction, evidence alignment, arithmetic, and control logic on a document not prepared as a guided scenario. Uploaded documents can never reach ready-for-approval.",
+    actions='<a href="/demo" class="btn-pill btn-pill-outline">Use the guided demo instead</a>',
+    aside='<span class="font-tabular text-xs text-ready">Sandbox open · temporary retention</span>'
+  ) }}
+
+  <div class="editorial-shell py-14 sm:py-20" id="upload-flow" data-rate-limit-per-hour="{{ rate_limit_per_hour }}" data-turnstile-site-key="{{ turnstile_site_key }}">
+
+    <!-- Stage: disclosure -->
+    <div data-stage="disclosure" class="upload-stage">
+      <div class="card-paper max-w-2xl p-6 sm:p-8">
+        <h2 class="font-display text-xl font-normal text-ink">Before you upload</h2>
+        <p class="mt-3 text-sm leading-relaxed text-ink-muted">
+          Upload any invoice-like PDF and watch extraction, evidence linking, arithmetic validation, and exception
+          routing run on it for real. Supplier and three-way matching only recognize LedgerGuard&rsquo;s included
+          fictional scenarios, so an uploaded invoice will normally resolve as an
+          <strong class="text-ink">exception</strong> — that&rsquo;s the honest, expected result, not a failure.
+          Don&rsquo;t upload confidential information or real banking details.
+        </p>
+
+        <dl class="mt-5 grid grid-cols-1 gap-x-6 gap-y-3 rounded-[var(--radius-card)] border border-rule bg-paper-raised/60 p-4 text-sm sm:grid-cols-2">
+          <div>
+            <dt class="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-faint">What to upload</dt>
+            <dd class="mt-0.5 text-ink">A digitally-generated PDF invoice</dd>
+          </div>
+          <div>
+            <dt class="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-faint">File type</dt>
+            <dd class="mt-0.5 text-ink">Digital PDF only — <span class="text-ink-muted">no scans or photos (needs OCR, not built yet)</span></dd>
+          </div>
+          <div>
+            <dt class="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-faint">Size and length</dt>
+            <dd class="mt-0.5 text-ink font-tabular">Up to 5 MB, up to 4 pages</dd>
+          </div>
+          <div>
+            <dt class="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-faint">How long it&rsquo;s kept</dt>
+            <dd class="mt-0.5 text-ink">Deleted automatically within 30 minutes, or instantly on request</dd>
+          </div>
+          <div class="sm:col-span-2">
+            <dt class="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-faint">How much you can run</dt>
+            <dd class="mt-0.5 text-ink font-tabular">Up to {{ rate_limit_per_hour }} upload{{ "" if rate_limit_per_hour == 1 else "s" }} per hour, per connection — plenty for one demo session</dd>
+          </div>
+        </dl>
+
+        <ul class="mt-4 space-y-1.5 text-xs text-ink-muted">
+          <li>· No account, no name, no email collected — a random session only.</li>
+          <li>· This can never authorize a payment or write a real accounting record.</li>
+        </ul>
+        <label class="mt-5 flex items-start gap-2.5 text-sm text-ink">
+          <input type="checkbox" id="upload-ack" class="mt-0.5">
+          I understand this is a temporary sandbox and won&rsquo;t upload confidential or sensitive information.
+        </label>
+        <button type="button" id="upload-continue" disabled class="btn-pill btn-pill-primary mt-5 disabled:cursor-not-allowed disabled:opacity-40">
+          Continue
+        </button>
+      </div>
+    </div>
+
+    <!-- Stage: ready (file picker) -->
+    <div data-stage="ready" class="upload-stage" hidden>
+      <div class="max-w-xl">
+        <div id="upload-dropzone" class="card-paper flex flex-col items-center gap-3 border-dashed p-8 text-center transition-colors">
+          <svg class="h-8 w-8 text-ink-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
+          <p class="text-sm text-ink">Drag a PDF invoice here, or</p>
+          <button type="button" id="upload-choose" class="btn-pill btn-pill-outline">Choose a file</button>
+          <input type="file" id="upload-file-input" accept="application/pdf" class="hidden">
+          <p class="text-xs text-ink-faint">Digital PDF only (no scans), up to 5 MB, up to 4 pages.</p>
+        </div>
+
+        <p class="mt-3 text-center text-[11px] leading-relaxed text-ink-faint">
+          Deleted automatically within 30 minutes · up to {{ rate_limit_per_hour }} upload{{ "" if rate_limit_per_hour == 1 else "s" }} per hour
+        </p>
+
+        <div id="upload-file-chosen" class="mt-4 hidden items-center justify-between rounded border border-rule bg-paper-raised px-4 py-3">
+          <div class="min-w-0">
+            <p class="truncate text-sm text-ink" id="upload-file-name"></p>
+            <p class="text-xs text-ink-faint" id="upload-file-size"></p>
+          </div>
+          <button type="button" id="upload-file-remove" class="text-xs text-ink-muted underline">Remove</button>
+        </div>
+
+        <p id="upload-error" class="mt-3 hidden text-sm text-blocked"></p>
+
+        <div class="mt-4" id="turnstile-container"></div>
+
+        <button type="button" id="upload-submit" disabled class="btn-pill btn-pill-primary mt-5 disabled:cursor-not-allowed disabled:opacity-40">
+          Run it through LedgerGuard
+        </button>
+      </div>
+    </div>
+
+    <!-- Stage: busy -->
+    <div data-stage="busy" class="upload-stage" hidden>
+      <div class="card-paper max-w-xl p-6 text-center sm:p-8">
+        <div class="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-rule-strong border-t-ink"></div>
+        <p class="mt-4 text-sm text-ink">Processing — this can take up to 30 seconds. No outcome is guaranteed until every check finishes.</p>
+        <ul class="mt-4 space-y-1.5 text-left text-xs text-ink-muted">
+          <li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-ink-faint"></span>Validating file</li>
+          <li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-ink-faint"></span>Extracting document text</li>
+          <li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-ink-faint"></span>Aligning evidence against the document</li>
+          <li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-ink-faint"></span>Recalculating amounts</li>
+          <li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-ink-faint"></span>Checking required controls</li>
+          <li class="flex items-center gap-2"><span class="h-1.5 w-1.5 rounded-full bg-ink-faint"></span>Choosing a responsible outcome</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Stage: error -->
+    <div data-stage="error" class="upload-stage" hidden>
+      <div class="card-paper max-w-xl p-6 text-center sm:p-8">
+        <svg class="mx-auto h-6 w-6 text-exception" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        <p class="mt-3 text-sm text-ink" id="upload-error-message"></p>
+        <button type="button" id="upload-retry" class="btn-pill btn-pill-primary mt-5">Try again</button>
+      </div>
+    </div>
+
+    <!-- Stage: result -->
+    <div data-stage="result" class="upload-stage" hidden>
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-rule pb-4">
+        <div class="flex items-center gap-2">
+          <h2 class="font-display text-lg font-normal text-ink" id="result-title"></h2>
+          <span id="result-outcome-badge"></span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="result-countdown" class="inline-flex items-center gap-1.5 text-xs text-ink-faint"></span>
+          <button type="button" id="upload-delete-now" class="btn-pill btn-pill-outline inline-flex items-center gap-1.5 !py-1.5 !px-3 text-xs">Delete my uploaded document now</button>
+          <span id="upload-deleted-confirmed" class="hidden inline-flex items-center gap-1.5 text-xs text-ready">Deleted</span>
+        </div>
+      </div>
+
+      <div id="result-deleted-panel" class="hidden mt-6 card-paper p-6 text-center">
+        <p class="text-sm text-ink">Your document and every derived record have been deleted.</p>
+        <button type="button" id="upload-try-another-1" class="btn-pill btn-pill-primary mt-4">Try another invoice</button>
+      </div>
+
+      <div id="result-content">
+        <div id="result-unmatched-notice" class="hidden mt-4 flex items-start gap-2.5 rounded border border-exception/40 bg-[var(--exception-bg)] px-4 py-3">
+          <p class="text-sm text-ink">
+            This supplier isn&rsquo;t in LedgerGuard&rsquo;s fictional approved-supplier master — expected for an
+            uploaded document, since the demo only recognizes its own seeded suppliers. Supplier, PO, and receipt
+            matching are unavailable here; extraction, evidence alignment, and arithmetic still ran for real.
+            Uploads never auto-approve, regardless of how clean the rest of the checks come back.
+          </p>
+        </div>
+
+        <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div class="card-paper p-2">
+            <iframe id="result-pdf-frame" title="Your uploaded invoice" class="h-[60vh] max-h-[560px] min-h-[320px] w-full rounded"></iframe>
+          </div>
+          <div class="card-paper p-5 sm:p-6">
+            <div class="mb-3 border-b border-rule-strong pb-2">
+              <span class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Extracted data</span>
+            </div>
+            <div id="result-extracted-fields" class="space-y-2 text-sm"></div>
+          </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div class="card-paper p-5 sm:p-6">
+            <div class="mb-3 border-b border-rule-strong pb-2">
+              <span class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Match evidence</span>
+            </div>
+            <div id="result-match" class="space-y-1.5 text-sm text-ink-muted"></div>
+          </div>
+          <div class="card-paper p-5 sm:p-6">
+            <div class="mb-3 border-b border-rule-strong pb-2">
+              <span class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Controls</span>
+            </div>
+            <div id="result-controls" class="space-y-1.5 text-sm"></div>
+          </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div class="card-paper p-5 sm:p-6">
+            <div class="mb-3 border-b border-rule-strong pb-2">
+              <span class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Proposed action</span>
+            </div>
+            <div id="result-action" class="space-y-1.5 text-sm text-ink-muted"></div>
+          </div>
+          <div class="card-paper p-5 sm:p-6">
+            <div class="mb-3 border-b border-rule-strong pb-2">
+              <span class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Audit trail</span>
+            </div>
+            <div id="result-audit" class="space-y-1.5 text-xs text-ink-muted"></div>
+          </div>
+        </div>
+
+        <div class="mt-6 flex justify-center">
+          <button type="button" id="upload-try-another-2" class="btn-pill btn-pill-outline">Try another invoice</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{ recruiter_proof(
+    title="The upload path proves the policy boundary generalizes.",
+    description="It uses separate validation, rate limiting, temporary storage, stricter routing, deletion controls, and its own evaluation results."
+  ) }}
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/upload.js"></script>
+{% endblock %}

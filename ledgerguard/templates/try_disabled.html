@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "partials/page_hero.html" import page_hero %}
+{% from "partials/recruiter_proof.html" import recruiter_proof %}
+{% block title %}Try your own invoice — LedgerGuard{% endblock %}
+{% block meta_description %}Upload one invoice PDF and see LedgerGuard's real extraction, evidence alignment, and controls run on it — a temporary, sandboxed demonstration.{% endblock %}
+{% block content %}
+<div>
+  {{ page_hero(
+    visual="upload",
+    eyebrow="Controlled upload boundary",
+    compact=true,
+    title='The public upload sandbox is <span class="hero-halftone block">closed by default.</span>',
+    description="Arbitrary document intake creates file-safety, privacy, abuse, and model-spend risk. Limited upload windows use the same extraction and control pipeline while applying a stricter policy that never allows a user document to become ready for approval.",
+    actions='<a href="/demo" class="btn-pill btn-pill-primary">Open the guided demo</a>',
+    aside='<span class="font-tabular text-xs text-ink-faint">UPLOAD_SANDBOX_ENABLED=false</span>'
+  ) }}
+
+  {{ recruiter_proof(
+    title="A closed feature can still demonstrate good product judgment.",
+    description="The upload path is implemented and evaluated separately, but disabled unless the file-safety, privacy, rate-limit, deletion, and spend controls are intentionally enabled."
+  ) }}
+</div>
+{% endblock %}

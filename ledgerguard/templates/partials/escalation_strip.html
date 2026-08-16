@@ -1,0 +1,112 @@
+{#
+  Escalation strip. RAMP colors are keyed by rung (project.order), not by
+  project identity: card 1 is always cool, card 2 always warm, card 3
+  always hot.
+#}
+{% set ramp = {
+  1: {"fg": "var(--duplicate)", "bg": "var(--duplicate-bg)"},
+  2: {"fg": "var(--exception)", "bg": "var(--exception-bg)"},
+  3: {"fg": "var(--blocked)", "bg": "var(--blocked-bg)"}
+} %}
+
+{% macro escalation_strip(projects, current, current_metric=none) %}
+<section id="escalation" aria-label="How the three-project escalation ladder fits together" class="section-pad section-hairline">
+  <div class="editorial-shell">
+    <div class="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+      <div>
+        <div class="reveal" data-reveal>
+          <p class="section-marker">Three systems, one argument.</p>
+        </div>
+        <div class="reveal" data-reveal data-reveal-delay="80">
+          <h2 class="mt-8 max-w-4xl font-display text-[clamp(2.6rem,5vw,5.25rem)] font-medium leading-[0.94] tracking-[-0.06em] text-ink">
+            The higher the stakes, the less the model gets to decide.
+          </h2>
+        </div>
+      </div>
+      <div class="reveal" data-reveal data-reveal-delay="140">
+        <div class="lg:mb-1">
+          <p class="text-base leading-relaxed text-ink-muted">
+            Each system automates judgment work an LLM can confidently get wrong. As the consequence grows,
+            deterministic controls and human authority take over.
+          </p>
+          <p class="mt-6 inline-flex items-center gap-2 font-tabular text-[11px] uppercase tracking-[0.12em] text-ink">
+            Recoverable <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg> Irreversible
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-14 grid grid-cols-1 gap-5 min-[820px]:grid-cols-3">
+      {% for project in projects %}
+      {% set is_current = project.id == current %}
+      {% set rung = ramp[project.order] %}
+      <div class="reveal h-full" data-reveal data-reveal-delay="{{ 220 + loop.index0 * 90 }}">
+        <a
+          href="{{ '/evals' if is_current else project.href }}"
+          {% if not is_current %}target="_blank" rel="noopener noreferrer"{% endif %}
+          {% if is_current %}aria-current="page"{% endif %}
+          class="group relative flex h-full min-h-[470px] flex-col justify-between overflow-hidden rounded-[var(--radius-card)] border p-6 shadow-[0_24px_60px_-48px_rgba(19,19,22,0.62)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_30px_70px_-46px_rgba(19,19,22,0.72)] sm:p-8 lg:p-9 {{ 'border-rule-strong bg-paper-light' if is_current else 'border-rule bg-paper-raised' }}"
+        >
+          <span class="absolute inset-x-0 top-0 h-1" style="background: {{ rung.fg }}" aria-hidden="true"></span>
+          <div>
+            <div class="flex items-start justify-between gap-4">
+              <span class="font-display text-5xl font-medium leading-none tracking-[-0.06em] text-ink-faint/40">0{{ project.order }}</span>
+              {% if is_current %}
+              <span class="rounded-full px-2.5 py-1 font-tabular text-[10px] font-semibold uppercase tracking-[0.1em]" style="background: {{ rung.bg }}; color: {{ rung.fg }}">You are here</span>
+              {% else %}
+              <svg class="h-5 w-5 text-ink-faint transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+              {% endif %}
+            </div>
+
+            <h3 class="mt-8 font-display text-[clamp(2rem,3vw,3rem)] font-medium tracking-[-0.055em] text-ink">{{ project.name }}</h3>
+            <p class="mt-1 text-sm text-ink-muted">{{ project.domain }}</p>
+
+            <div class="mt-7 rounded-2xl p-5" style="background: {{ rung.bg }}">
+              <p class="font-tabular text-[10px] font-semibold uppercase tracking-[0.12em]" style="color: {{ rung.fg }}">{{ project.stake }} consequence</p>
+              <p class="mt-3 text-sm leading-relaxed text-ink">{{ project.consequence }}</p>
+            </div>
+
+            <div class="mt-7">
+              <p class="font-tabular text-[10px] uppercase tracking-[0.12em] text-ink-faint">Control principle</p>
+              <p class="mt-2 text-sm leading-relaxed text-ink-muted">{{ project.safeguard }}</p>
+            </div>
+          </div>
+
+          <div class="mt-8 flex items-end justify-between gap-4 border-t border-rule pt-5">
+            {% if is_current and current_metric %}
+            <p class="text-sm text-ink-muted"><strong class="font-display text-xl font-medium text-ink">{{ current_metric.value }}</strong> {{ current_metric.label }}</p>
+            {% else %}
+            <p class="font-tabular text-[10px] uppercase tracking-[0.1em] text-ink-faint">View project</p>
+            {% endif %}
+            <svg class="h-5 w-5 shrink-0 text-ink transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endmacro %}
+
+{% macro escalation_strip_compact(projects, current) %}
+<section aria-label="Related projects" class="border-t border-rule">
+  <div class="editorial-shell grid grid-cols-1 gap-3 py-6 sm:grid-cols-3">
+    {% for project in projects %}
+    {% set is_current = project.id == current %}
+    {% set rung = ramp[project.order] %}
+    <a
+      href="{{ '/evals' if is_current else project.href }}"
+      {% if not is_current %}target="_blank" rel="noopener noreferrer"{% endif %}
+      {% if is_current %}aria-current="page"{% endif %}
+      class="flex items-center gap-3 rounded-[var(--radius-card)] border border-rule bg-paper-raised px-4 py-3 transition-transform hover:-translate-y-0.5"
+    >
+      <span aria-hidden="true" class="h-2 w-2 shrink-0 rounded-full" style="background: {{ rung.fg }}"></span>
+      <span class="min-w-0">
+        <span class="block truncate font-display text-base font-medium text-ink">{{ project.name }}</span>
+        <span class="block truncate font-tabular text-[11px] uppercase tracking-[0.08em] text-ink-faint">{{ "You are here" if is_current else project.domain ~ " · " ~ project.stake }}</span>
+      </span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endmacro %}

@@ -1,0 +1,95 @@
+{#
+  Interactive pipeline stage board: server-rendered + vanilla JS. All stages
+  render up front (index 0 visible, the rest hidden with the `hidden`
+  attribute); clicking a row in the left list swaps which detail panel is
+  shown and which row carries the selected styling. `stages` is a list of
+  dicts: {title, detail, actor} where actor is "ai" | "deterministic" | "human".
+#}
+{% macro architecture_stage_board(stages) %}
+{% set actor_label = {"ai": "AI model", "deterministic": "Deterministic code", "human": "Human review"} %}
+{% set actor_class = {"ai": "bg-exception-bg text-exception", "deterministic": "bg-ready-bg text-ready", "human": "bg-duplicate-bg text-duplicate"} %}
+{% set dot_class = {"ai": "bg-exception", "deterministic": "bg-ready", "human": "bg-duplicate"} %}
+<div class="architecture-stage-board mt-12 grid overflow-hidden rounded-[var(--radius-card)] border border-rule bg-paper-raised lg:grid-cols-[0.85fr_1.15fr]" data-stage-board>
+  <ol class="border-b border-rule lg:border-b-0 lg:border-r">
+    {% for stage in stages %}
+    <li class="border-b border-rule last:border-b-0">
+      <button
+        type="button"
+        data-stage-trigger
+        data-stage-index="{{ loop.index0 }}"
+        aria-pressed="{{ 'true' if loop.first else 'false' }}"
+        class="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors sm:px-6 {{ 'border-l-4 border-accent bg-paper text-ink' if loop.first else 'border-l-4 border-transparent text-ink-muted hover:bg-paper' }}"
+      >
+        <span class="font-tabular text-xs text-ink-faint">{{ "%02d"|format(loop.index) }}</span>
+        <span class="min-w-0 flex-1">
+          <span class="block truncate font-display text-base font-medium tracking-[-0.02em] sm:text-lg">{{ stage.title }}</span>
+          <span class="mt-1 block font-tabular text-[10px] uppercase tracking-[0.1em] text-ink-faint">{{ actor_label[stage.actor] }}</span>
+        </span>
+        <span class="h-2 w-2 shrink-0 rounded-full {{ dot_class[stage.actor] }}" aria-hidden="true"></span>
+      </button>
+    </li>
+    {% endfor %}
+  </ol>
+
+  <div class="bg-paper p-6 sm:p-9">
+    {% for stage in stages %}
+    <div data-stage-panel data-stage-index="{{ loop.index0 }}" {% if not loop.first %}class="hidden"{% endif %}>
+      <p class="font-tabular text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+        Selected stage · {{ "%02d"|format(loop.index) }} / {{ "%02d"|format(stages|length) }}
+      </p>
+      <h3 class="mt-5 max-w-2xl font-display text-3xl font-medium tracking-[-0.05em] text-ink sm:text-5xl">{{ stage.title }}</h3>
+      <p class="mt-5 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">{{ stage.detail }}</p>
+
+      <dl class="mt-9 border-y border-rule">
+        <div class="flex items-center justify-between gap-5 border-b border-rule py-4 text-sm">
+          <dt class="text-ink-muted">Owner</dt>
+          <dd class="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide {{ actor_class[stage.actor] }}">{{ actor_label[stage.actor] }}</dd>
+        </div>
+        <div class="flex items-center justify-between gap-5 border-b border-rule py-4 text-sm">
+          <dt class="text-ink-muted">Pipeline position</dt>
+          <dd class="font-tabular text-ink">Stage {{ loop.index }} of {{ stages|length }}</dd>
+        </div>
+        <div class="flex items-center justify-between gap-5 py-4 text-sm">
+          <dt class="text-ink-muted">Review principle</dt>
+          <dd class="text-right font-medium text-ink">Explicit responsibility</dd>
+        </div>
+      </dl>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{#
+  Inline script, kept inside the macro (not as sibling top-level content) so
+  it actually emits: templates import this file with
+  `{% from "partials/architecture_stage_board.html" import
+  architecture_stage_board %}`, which only pulls in macro definitions —
+  anything outside a macro in this file is never rendered by that form of
+  include.
+#}
+<script>
+(function () {
+  "use strict";
+  document.querySelectorAll("[data-stage-board]").forEach(function (board) {
+    var triggers = board.querySelectorAll("[data-stage-trigger]");
+    triggers.forEach(function (trigger) {
+      trigger.addEventListener("click", function () {
+        var index = trigger.getAttribute("data-stage-index");
+        triggers.forEach(function (t) {
+          var selected = t === trigger;
+          t.setAttribute("aria-pressed", selected ? "true" : "false");
+          t.classList.toggle("border-accent", selected);
+          t.classList.toggle("bg-paper", selected);
+          t.classList.toggle("text-ink", selected);
+          t.classList.toggle("border-transparent", !selected);
+          t.classList.toggle("text-ink-muted", !selected);
+        });
+        board.querySelectorAll("[data-stage-panel]").forEach(function (panel) {
+          panel.classList.toggle("hidden", panel.getAttribute("data-stage-index") !== index);
+        });
+      });
+    });
+  });
+})();
+</script>
+{% endmacro %}

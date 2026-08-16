@@ -1,0 +1,79 @@
+{# Impact calculator. Static defaults below reproduce this project's stated
+   fictional baseline; static/js/impact.js recomputes the outputs live on
+   `input` events using the same formulas. #}
+<div id="impact-calculator">
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <div class="card-paper space-y-5 p-7 sm:p-9">
+      <h3 class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Inputs — illustrative, adjust freely</h3>
+
+      <label class="block">
+        <div class="flex items-baseline justify-between">
+          <span class="text-xs text-ink-muted">Invoices processed per month</span>
+          <span class="font-tabular text-sm font-medium text-ink" data-value>2,000</span>
+        </div>
+        <input type="range" min="200" max="10000" step="100" value="2000" data-input="invoicesPerMonth" class="mt-1.5 w-full accent-[var(--accent)]">
+      </label>
+
+      <label class="block">
+        <div class="flex items-baseline justify-between">
+          <span class="text-xs text-ink-muted">Average manual preparation time</span>
+          <span class="font-tabular text-sm font-medium text-ink" data-value>8 min</span>
+        </div>
+        <input type="range" min="2" max="20" step="1" value="8" data-input="minutesPerInvoice" data-suffix=" min" class="mt-1.5 w-full accent-[var(--accent)]">
+      </label>
+
+      <label class="block">
+        <div class="flex items-baseline justify-between">
+          <span class="text-xs text-ink-muted">Eligible for straight-through preparation</span>
+          <span class="font-tabular text-sm font-medium text-ink" data-value>60%</span>
+        </div>
+        <input type="range" min="20" max="90" step="5" value="60" data-input="straightThroughPct" data-suffix="%" class="mt-1.5 w-full accent-[var(--accent)]">
+      </label>
+
+      <label class="block">
+        <div class="flex items-baseline justify-between">
+          <span class="text-xs text-ink-muted">AP labor cost per hour</span>
+          <span class="font-tabular text-sm font-medium text-ink" data-value>34 $/hr</span>
+        </div>
+        <input type="range" min="18" max="70" step="1" value="34" data-input="apCostPerHour" data-suffix=" $/hr" class="mt-1.5 w-full accent-[var(--accent)]">
+      </label>
+
+      <label class="block">
+        <div class="flex items-baseline justify-between">
+          <span class="text-xs text-ink-muted">Automation cost per invoice</span>
+          <span class="font-tabular text-sm font-medium text-ink" data-value>0.08 $</span>
+        </div>
+        <input type="range" min="0.02" max="0.5" step="0.01" value="0.08" data-input="automationCostPerInvoice" data-suffix=" $" class="mt-1.5 w-full accent-[var(--accent)]">
+      </label>
+    </div>
+
+    <div class="space-y-4 rounded-[var(--radius-card)] bg-paper-raised p-7 sm:p-9">
+      <h3 class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Illustrative monthly outputs</h3>
+      <div>
+        <div class="font-display text-4xl font-bold text-ink sm:text-5xl" data-output="hoursReturned">160 hrs</div>
+        <p class="mt-1 text-xs text-ink-muted">AP hours potentially returned</p>
+      </div>
+      <div>
+        <div class="font-display text-4xl font-bold text-ink sm:text-5xl" data-output="netMonthlySavings">$5,280</div>
+        <p class="mt-1 text-xs text-ink-muted">Estimated net monthly savings (labor returned minus automation cost)</p>
+      </div>
+      <dl class="grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-rule pt-4 text-sm">
+        <dt class="text-ink-faint">Prepared without manual entry</dt>
+        <dd class="text-right font-tabular text-ink" data-output="eligibleInvoices">1,200 invoices</dd>
+        <dt class="text-ink-faint">Estimated exception rate</dt>
+        <dd class="text-right font-tabular text-ink" data-output="exceptionCount">25% (500/mo)</dd>
+        <dt class="text-ink-faint">Automation cost</dt>
+        <dd class="text-right font-tabular text-ink" data-output="automationCost">$160/mo</dd>
+        <dt class="text-ink-faint">Blended cost per invoice</dt>
+        <dd class="text-right font-tabular text-ink" data-output="costPerInvoice">$1.89</dd>
+        <dt class="text-ink-faint">First-pass preparation time</dt>
+        <dd class="text-right font-tabular text-ink">minutes → under 30s</dd>
+      </dl>
+    </div>
+  </div>
+  <p class="mt-5 text-[11px] text-ink-faint">
+    Demonstration assumptions, not customer outcomes. Defaults reproduce this
+    project&rsquo;s own stated fictional baseline (2,000 invoices/mo, 8 min manual
+    prep, 60% straight-through → 160 AP hours/mo).
+  </p>
+</div>

@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.db
+*.egg-info/
+.env
+.venv/
+venv/
+data/pdfs/
+.pytest_cache/
+.ruff_cache/
+styles/node_modules/
+eval-cases/
+demo-scenarios/
+uploads/

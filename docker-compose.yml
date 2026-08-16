@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ledgerguard
+      POSTGRES_USER: ledgerguard
+      POSTGRES_PASSWORD: ledgerguard
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ledgerguard"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    volumes: ["ledgerguard_data:/var/lib/postgresql/data"]
+  web:
+    build: .
+    # --proxy-headers/--forwarded-allow-ips: trust the upstream's X-Forwarded-Proto
+    # so request.url_for() reports https behind a TLS-terminating reverse proxy
+    # instead of the plain-http transport between the proxy and this container.
+    command: uvicorn ledgerguard.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://ledgerguard:ledgerguard@db:5432/ledgerguard
+      PDF_STORAGE_DIR: /data/pdfs
+    volumes: ["ledgerguard_pdfs:/data/pdfs"]
+    # Host port 8001: the deployment host's Traefik runs in host network mode
+    # and reaches services via published ports; 8000 is taken by another stack.
+    ports: ["8001:8000"]
+    depends_on:
+      db: {condition: service_healthy}
+  worker:
+    build: .
+    command: ledgerguard-worker
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://ledgerguard:ledgerguard@db:5432/ledgerguard
+      PDF_STORAGE_DIR: /data/pdfs
+    volumes: ["ledgerguard_pdfs:/data/pdfs"]
+    depends_on:
+      db: {condition: service_healthy}
+  cleanup-cron:
+    # No cron daemon in the base image — a simple sleep loop calling the
+    # gated cleanup endpoint daily is the whole job. Real cron on the host
+    # (or the platform's own scheduled-task feature) works equally well;
+    # this just keeps the stack self-contained in Compose.
+    image: curlimages/curl:8.10.1
+    env_file: .env
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          sleep 86400
+          curl -sf -H "Authorization: Bearer $$CRON_SECRET" http://web:8000/api/upload/cleanup || true
+        done
+    depends_on:
+      - web
+volumes:
+  ledgerguard_data:
+  ledgerguard_pdfs:

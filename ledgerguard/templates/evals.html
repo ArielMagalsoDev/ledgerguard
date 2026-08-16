@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+{% from "partials/page_hero.html" import page_hero %}
+{% from "partials/recruiter_proof.html" import recruiter_proof %}
+
+{% block title %}Evaluations — LedgerGuard{% endblock %}
+{% block meta_description %}Extraction and control scorecard.{% endblock %}
+
+{% block content %}
+{#
+  formatMetric (lib/evals/format.ts) port — local macro, same rounding rules:
+  pct -> one decimal + "%", ms -> seconds to one decimal + "s", usd -> 4 dp.
+#}
+{% macro format_metric(value, fmt) -%}
+  {%- if value is not number -%}n/a
+  {%- elif fmt == "pct" -%}{{ "%.1f"|format(value * 100) }}%
+  {%- elif fmt == "ms" -%}{{ "%.1f"|format(value / 1000) }}s
+  {%- else -%}${{ "%.4f"|format(value) }}
+  {%- endif -%}
+{%- endmacro %}
+
+{#
+  COMPUTED_METRICS — static metric list, mapped to the CLAUDE.md
+  section 15 acceptance target where one exists.
+#}
+{% set computed_metrics = [
+  {"key": "outcomeAccuracy", "label": "Exception-routing / outcome accuracy", "target": "≥ 95%", "format": "pct"},
+  {"key": "headerFieldAccuracy", "label": "Header-field accuracy (invoice number)", "target": "≥ 97%", "format": "pct"},
+  {"key": "monetaryFieldAccuracy", "label": "Monetary-field accuracy (total)", "target": "≥ 99%", "format": "pct"},
+  {"key": "lineItemFieldAccuracy", "label": "Line-item extraction accuracy", "target": "≥ 95%", "format": "pct"},
+  {"key": "evidenceCoordinateValidity", "label": "Evidence-coordinate validity", "target": "≥ 98%", "format": "pct"},
+  {"key": "unsupportedFieldRate", "label": "Unsupported-field rate", "target": "< 1%", "format": "pct"},
+  {"key": "supplierMatchAccuracy", "label": "Supplier-match accuracy", "target": "n/a", "format": "pct"},
+  {"key": "poMatchAccuracy", "label": "PO-line match accuracy", "target": "n/a", "format": "pct"},
+  {"key": "duplicatePrecision", "label": "Duplicate precision", "target": "≥ 98%", "format": "pct"},
+  {"key": "duplicateRecall", "label": "Duplicate recall", "target": "100%", "format": "pct"},
+  {"key": "falseClearanceRate", "label": "Critical-control false-clearance rate", "target": "0%", "format": "pct"},
+  {"key": "falseHoldRate", "label": "False-hold rate", "target": "n/a", "format": "pct"},
+  {"key": "injectionDefenseHoldRate", "label": "Injection defense hold rate (outcome unchanged by injected text)", "target": "100%", "format": "pct"},
+  {"key": "meanLatencyMs", "label": "Mean latency per case", "target": "n/a", "format": "ms"},
+  {"key": "meanCostUsd", "label": "Mean model cost per case", "target": "n/a", "format": "usd"},
+] %}
+
+{#
+  CATEGORY_META / EVAL_DATASET_NOTE — static labels and targets only.
+  Per-category "today" and "held-out" counts would require iterating an
+  actual eval-case list, which doesn't exist here (no evals/cases.py) —
+  main.py's evals() route only passes `run`/`upload_run`, not a case list.
+  Shown as targets-only below rather than fabricating per-category counts.
+#}
+{% set eval_dataset_note = {"v1Target": 21, "fullTarget": 100} %}
+{% set category_meta = [
+  {"key": "clean_match", "label": "Clean matched invoices", "v1Target": 3, "fullTarget": 30},
+  {"key": "price_quantity_exception", "label": "Price or quantity exceptions", "v1Target": 3, "fullTarget": 20},
+  {"key": "arithmetic_tax_failure", "label": "Arithmetic or tax failures", "v1Target": 3, "fullTarget": 10},
+  {"key": "duplicate", "label": "Exact or probable duplicates", "v1Target": 3, "fullTarget": 15},
+  {"key": "supplier_bank_detail", "label": "Supplier-identity or bank-detail exceptions", "v1Target": 3, "fullTarget": 10},
+  {"key": "ambiguous_scan", "label": "Poor-quality or ambiguous scans", "v1Target": 3, "fullTarget": 10},
+  {"key": "adversarial_injection", "label": "Adversarial embedded-instruction documents", "v1Target": 3, "fullTarget": 5},
+] %}
+{% set category_labels = {} %}
+{% for c in category_meta %}{% set _ = category_labels.update({c.key: c.label}) %}{% endfor %}
+
+{% set held_out_metrics = run.metrics.get("heldOut", {}) if run else {} %}
+{% set dev_metrics = run.metrics.get("dev", {}) if run else {} %}
+{% set per_case = run.per_case if run else [] %}
+{% set failing_cases = per_case | rejectattr("pass") | list %}
+
+{% set hero_title %}Evaluation results that show <span class="hero-halftone block">where the system works—and where it does not.</span>{% endset %}
+{% set hero_description %}The harness submits labeled fictional invoices through the actual extraction, evidence-alignment, matching, and decision pipeline. Held-out proof, development metrics, per-case failures, latency, and cost remain separate and visible.{% endset %}
+{% set hero_actions %}
+<a href="/demo" class="btn-pill btn-pill-primary">Run the evaluated scenarios</a>
+<a href="https://github.com/ArielMagalsoDev/ledgerguard-python" target="_blank" rel="noopener noreferrer" class="btn-pill btn-pill-outline">Inspect the source ↗</a>
+{% endset %}
+{% set hero_aside %}
+{% if run %}
+<div class="font-tabular text-xs text-ink-faint">
+  <strong class="block font-display text-4xl font-normal {{ 'text-ready' if run.passed_cases == run.total_cases else 'text-exception' }}">{{ run.passed_cases }}/{{ run.total_cases }}</strong>
+  complete-dataset cases passed
+  <span class="mt-2 block">{{ format_metric(held_out_metrics.get("falseClearanceRate"), "pct") }} latest critical false-clearance rate</span>
+</div>
+{% else %}
+<span class="font-tabular text-xs text-ink-faint">No recorded run</span>
+{% endif %}
+{% endset %}
+
+<div>
+{{ page_hero(visual="evals", eyebrow="Measured system behavior", compact=true, title=hero_title, description=hero_description, actions=hero_actions, aside=hero_aside) }}
+
+<section class="eval-scorecard-surface border-y border-rule">
+<div class="editorial-shell py-14 sm:py-20">
+  <div class="mb-8 max-w-2xl">
+    <p class="section-marker">Evaluation scorecard</p>
+    <h2 class="display-lg mt-3 text-ink">Held-out proof first. Failures kept visible.</h2>
+    <p class="mt-2 text-sm leading-relaxed text-ink-muted">No customer invoices are used, and no development-set score is presented as held-out production proof.</p>
+  </div>
+
+  {% if not run %}
+  <p class="mt-6 rounded border border-rule bg-paper-raised/50 px-4 py-3 text-sm text-ink-muted">
+    No eval run yet — run <code class="font-tabular text-xs">python -m ledgerguard.evals</code> to populate this page.
+  </p>
+  {% endif %}
+
+  {% if run %}
+  <section class="mt-10">
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-rule-strong pb-2">
+      <h2 class="font-display text-2xl font-normal text-ink">Held-out metrics — production proof</h2>
+      <span class="font-tabular text-sm font-semibold {{ 'text-ready' if run.passed_cases == run.total_cases else 'text-exception' }}">
+        {{ run.passed_cases }}/{{ run.total_cases }} cases passed overall
+      </span>
+    </div>
+    <p class="mt-2 text-xs text-ink-faint">
+      {{ run.run_at.strftime("%Y-%m-%d %H:%M") }} · policy {{ run.policy_version }} · these numbers are computed only
+      over the held-out split — cases never used to tune anything. CLAUDE.md section 15: a dev-set score is
+      never presented as production proof.
+    </p>
+    <div class="mt-4 rounded-[var(--radius-card)] border border-rule bg-paper-raised p-5 text-sm text-ink-muted">
+      <strong class="text-ink">How to read the headline:</strong> the held-out score and complete-dataset
+      score measure different splits. The held-out cases are reserved from tuning; the overall count also
+      includes development cases. Failed field-level checks remain visible below and do not get folded into
+      the critical-control false-clearance metric.
+    </div>
+    <div class="mt-4">
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[480px] text-left text-sm">
+          <tbody class="divide-y divide-rule">
+            {% for m in computed_metrics %}
+            <tr>
+              <td class="py-2 pr-6 text-ink-muted">{{ m.label }}</td>
+              <td class="py-2 pr-6 text-right font-tabular font-medium text-ink">{{ format_metric(held_out_metrics.get(m.key), m.format) }}</td>
+              <td class="py-2 text-right font-tabular text-xs text-ink-faint">{{ m.target }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <p class="mt-2 text-xs text-ink-faint">Over {{ held_out_metrics.get("caseCount", 0) }} case(s).</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="mt-10">
+    <h2 class="font-display text-xl font-normal text-ink">Dev-set metrics — tuning only, not proof</h2>
+    <p class="mt-2 max-w-2xl text-sm text-ink-muted">
+      The larger split (~80% of cases per category). Useful for catching regressions while iterating; never
+      cited as the production number.
+    </p>
+    <div class="mt-4">
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[480px] text-left text-sm">
+          <tbody class="divide-y divide-rule">
+            {% for m in computed_metrics %}
+            <tr>
+              <td class="py-2 pr-6 text-ink-muted">{{ m.label }}</td>
+              <td class="py-2 pr-6 text-right font-tabular font-medium text-ink">{{ format_metric(dev_metrics.get(m.key), m.format) }}</td>
+              <td class="py-2 text-right font-tabular text-xs text-ink-faint">{{ m.target }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <p class="mt-2 text-xs text-ink-faint">Over {{ dev_metrics.get("caseCount", 0) }} case(s).</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="mt-10">
+    <h2 class="font-display text-xl font-normal text-ink">Per-case results</h2>
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full min-w-[620px] text-left text-sm">
+        <thead>
+          <tr class="text-[11px] uppercase tracking-wide text-ink-faint">
+            <th class="pb-2 pr-4 font-medium">Case</th>
+            <th class="pb-2 pr-4 font-medium">Category</th>
+            <th class="pb-2 pr-4 font-medium">Split</th>
+            <th class="pb-2 font-medium">Result</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-rule">
+          {% for c in per_case %}
+          <tr>
+            <td class="py-2.5 pr-4 text-ink">{{ c.title }}</td>
+            <td class="py-2.5 pr-4 text-ink-muted">{{ category_labels.get(c.category, c.category) }}</td>
+            <td class="py-2.5 pr-4">
+              <span class="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide {{ 'bg-[var(--ready-bg)] text-ready' if c.split == 'held_out' else 'bg-paper-raised text-ink-faint' }}">
+                {{ "Held-out" if c.split == "held_out" else "Dev" }}
+              </span>
+            </td>
+            <td class="py-2.5">
+              {% if c.error %}
+              <span class="inline-flex items-center gap-1.5 text-blocked" title="{{ c.error }}">Error</span>
+              {% elif c["pass"] %}
+              <span class="inline-flex items-center gap-1.5 text-ready">Pass</span>
+              {% else %}
+              <span class="inline-flex items-center gap-1.5 text-blocked" title="{{ c.checks }}">Fail — {{ c.checks.items() | rejectattr("1") | map(attribute="0") | join(", ") }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if failing_cases|length > 0 %}
+    <div class="mt-5 rounded-[var(--radius-card)] border border-exception/30 bg-[var(--exception-bg)] p-5">
+      <h3 class="font-display text-lg text-ink">Failure analysis</h3>
+      <p class="mt-2 max-w-3xl text-sm leading-relaxed text-ink-muted">
+        The latest run contains {{ failing_cases|length }} case-level failure(s).
+        They are retained publicly instead of being removed from the dataset. Review the failed check names
+        in the table above; remediation focuses on extraction support and evidence alignment, while
+        deterministic financial controls continue to prevent unsupported invoices from being cleared.
+      </p>
+    </div>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {#
+    Upload sandbox validation — a distinct code path (source="upload"), per
+    CLAUDE.md Phase 4: never presented as part of the seeded pipeline's
+    production-proof numbers above.
+  #}
+  <section class="mt-14">
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-rule-strong pb-2">
+      <h2 class="font-display text-2xl font-normal text-ink">Upload sandbox validation results</h2>
+      {% if upload_run %}
+      <span class="font-tabular text-sm font-semibold {{ 'text-ready' if upload_run.passed_cases == upload_run.total_cases else 'text-exception' }}">
+        {{ upload_run.passed_cases }}/{{ upload_run.total_cases }} cases passed
+      </span>
+      {% endif %}
+    </div>
+    <p class="mt-2 max-w-2xl text-sm text-ink-muted">
+      A small, separate case set run through the actual bring-your-own-invoice upload path — not the seeded-scenario
+      intake above — to prove the upload-mode policy variant behaves as designed. Most importantly, that an uploaded
+      document can <strong class="text-ink">never</strong> reach <code class="font-tabular text-xs">ready_for_approval</code>,
+      even one that would otherwise cleanly match everything. This is validation of a code path, not a statistical
+      accuracy claim — it is never combined with the held-out or dev numbers above.
+    </p>
+
+    {% if not upload_run %}
+    <p class="mt-4 rounded border border-rule bg-paper-raised/50 px-4 py-3 text-sm text-ink-muted">
+      No upload-eval run yet — this section populates once the upload sandbox validation harness has run.
+    </p>
+    {% endif %}
+
+    {% if upload_run %}
+    <p class="mt-2 text-xs text-ink-faint">{{ upload_run.run_at.strftime("%Y-%m-%d %H:%M") }}</p>
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full min-w-[560px] text-left text-sm">
+        <thead>
+          <tr class="text-[11px] uppercase tracking-wide text-ink-faint">
+            <th class="pb-2 pr-4 font-medium">Case</th>
+            <th class="pb-2 pr-4 font-medium">Outcome</th>
+            <th class="pb-2 font-medium">Result</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-rule">
+          {% for c in upload_run.per_case %}
+          <tr>
+            <td class="py-2.5 pr-4 text-ink">{{ c.title }}</td>
+            <td class="py-2.5 pr-4 font-tabular text-ink-muted">{{ c.outcome or "—" }}</td>
+            <td class="py-2.5">
+              {% if c.error %}
+              <span class="inline-flex items-center gap-1.5 text-blocked" title="{{ c.error }}">Error</span>
+              {% elif c["pass"] %}
+              <span class="inline-flex items-center gap-1.5 text-ready">Pass</span>
+              {% else %}
+              <span class="inline-flex items-center gap-1.5 text-blocked">Fail</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </section>
+
+  {#
+    Dataset section — targets-only (see note above the category_meta set)
+    since per-category current/held-out counts aren't available from
+    main.py's context. run.total_cases (when a run exists) is the only
+    real, honest measurement of the current dataset size in this build.
+  #}
+  <section class="mt-14">
+    <h2 class="font-display text-2xl font-normal text-ink">Labeled dataset</h2>
+    <p class="mt-2 max-w-2xl text-sm text-ink-muted">
+      Target: {{ eval_dataset_note.fullTarget }} fictional labeled documents. v1 target is a
+      {{ eval_dataset_note.v1Target }}-case slice (3 per category)
+      {% if run %}
+      — <strong class="text-ink">{{ run.total_cases }} case{{ "" if run.total_cases == 1 else "s" }} ran in the latest recorded run</strong>,
+      {% else %}
+      — <strong class="text-ink">no run recorded yet</strong>,
+      {% endif %}
+      stated honestly rather than padded. Categories under 5 cases don&rsquo;t get a held-out split — too few to
+      divide meaningfully — a real limitation, not hidden.
+    </p>
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full min-w-[420px] text-left text-sm">
+        <thead>
+          <tr class="text-[11px] uppercase tracking-wide text-ink-faint">
+            <th class="pb-2 pr-4 font-medium">Category</th>
+            <th class="pb-2 pr-4 text-right font-medium">v1 target</th>
+            <th class="pb-2 text-right font-medium">Full target</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-rule">
+          {% for cat in category_meta %}
+          <tr>
+            <td class="py-2 pr-4 text-ink-muted">{{ cat.label }}</td>
+            <td class="py-2 pr-4 text-right font-tabular text-ink-faint">{{ cat.v1Target }}</td>
+            <td class="py-2 text-right font-tabular text-ink-faint">{{ cat.fullTarget }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="font-medium">
+            <td class="py-2 pr-4 text-ink">Total</td>
+            <td class="py-2 pr-4 text-right font-tabular text-ink">{{ eval_dataset_note.v1Target }}</td>
+            <td class="py-2 text-right font-tabular text-ink">{{ eval_dataset_note.fullTarget }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-6 text-xs text-ink-faint">
+      Dev and held-out sets are separated — stratified per category, ~20% held out where a category has 5+ cases.
+      The held-out numbers above are what CLAUDE.md section 15 means by production proof; dev numbers are for
+      tuning and are shown separately, never blended into a single headline figure.
+    </p>
+  </section>
+</div>
+</section>
+
+{{ recruiter_proof(title="The evaluation methodology is part of the portfolio evidence.", description="The public scorecard separates held-out and development cases, preserves failures, measures critical false clearances independently, and reports latency and model cost.") }}
+</div>
+{% endblock %}

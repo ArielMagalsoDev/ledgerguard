@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% from "partials/page_hero.html" import page_hero %}
+{% from "partials/recruiter_proof.html" import recruiter_proof %}
+{% from "partials/outcome_badge.html" import outcome_badge %}
+
+{% block title %}AP Review Queue — LedgerGuard{% endblock %}
+{% block meta_description %}Real invoices grouped by Ready, Exception, Duplicate Hold, and Blocked.{% endblock %}
+
+{% block content %}
+{#
+  route-labels.ts port: `format_route` / `owner_from_route` macros below stand
+  in for lib/route-labels.ts's ROUTE_LABELS + formatRoute(). Kept local to
+  this template (no shared filter registered on the Jinja env in main.py) so
+  this file works standalone regardless of what other templates need.
+#}
+{% set route_labels = {
+  "ap_review_team": "AP review team",
+  "controller": "Controller",
+  "finance_manager": "Finance manager",
+  "regional_operations_manager": "Regional operations manager",
+  "property_manager": "Property manager",
+} %}
+{% macro format_route(role) -%}
+  {%- set parts = role.split(":") -%}
+  {%- set key = parts[0] -%}
+  {%- set label = route_labels.get(key, key.replace("_", " ")) -%}
+  {%- if parts|length > 1 -%}{{ label }} — {{ parts[1] }}{%- else -%}{{ label }}{%- endif -%}
+{%- endmacro %}
+{% macro owner_from_route(route) -%}
+  {%- if route|length == 0 -%}AP review team{%- else -%}{{ format_route(route[0]) }}{%- endif -%}
+{%- endmacro %}
+
+{#
+  Outcome description text (outcome_badge.html owns label/color):
+  ledgerguard/outcome.py doesn't exist yet, so the descriptions are
+  inlined here rather than blocking on it.
+#}
+{% set outcome_descriptions = {
+  "ready_for_approval": "Extraction complete, arithmetic valid, supplier and PO match, no duplicate, tolerances pass.",
+  "exception_review": "Legitimate-looking invoice with a price, quantity, tax, receipt, or documentation exception.",
+  "duplicate_hold": "Exact or probable duplicate evidence — requires AP investigation before anything else happens.",
+  "blocked": "Supplier identity, bank details, file safety, or required fields fail a high-risk control.",
+} %}
+
+{% set role_options = [
+  {"value": "property_manager", "label": "Property manager"},
+  {"value": "regional_operations_manager", "label": "Regional ops manager"},
+  {"value": "finance_manager", "label": "Finance manager"},
+  {"value": "controller", "label": "Controller"},
+  {"value": "ap_review_team", "label": "AP review team"},
+] %}
+
+{% set groups_order = ["ready_for_approval", "exception_review", "duplicate_hold", "blocked"] %}
+
+{#
+  NOTE on filter options: main.py's queue() route only passes the
+  already-filtered `invoices` list (it applies ?supplier=/?property=
+  server-side before rendering), so the supplier/property dropdown options
+  and the aside stat counts below are built from the *filtered* set —
+  selecting a filter can shrink its own dropdown's option list. Building
+  the options from an unfiltered list would need main.py to also pass an
+  extra, unfiltered dataset.
+#}
+{% set suppliers = invoices | map(attribute="supplierName") | reject("none") | unique | sort %}
+{% set ns = namespace(properties={}) %}
+{% for inv in invoices %}
+  {% if inv.propertyCode %}{% set _ = ns.properties.update({inv.propertyCode: inv.propertyName or inv.propertyCode}) %}{% endif %}
+{% endfor %}
+{% set properties = ns.properties | dictsort(by="value") %}
+
+{% set supplier_param = request.query_params.get("supplier", "") %}
+{% set property_param = request.query_params.get("property", "") %}
+
+{% set exception_count = invoices | selectattr("outcome", "equalto", "exception_review") | list | length %}
+{% set hold_count = (invoices | selectattr("outcome", "equalto", "duplicate_hold") | list | length) + (invoices | selectattr("outcome", "equalto", "blocked") | list | length) %}
+
+{% set hero_title %}The AI prepares the work. <span class="hero-halftone block">People retain authority.</span>{% endset %}
+{% set hero_description %}Every invoice here passed through extraction, matching, and the decision engine. Approvals, rejections, reassignment, and comments are server-checked against the invoice&rsquo;s route and recorded permanently.{% endset %}
+{% set hero_actions %}
+<a href="/demo" class="btn-pill btn-pill-primary">Inspect a scenario</a>
+<a href="/operations" class="btn-pill btn-pill-outline">View operations</a>
+{% endset %}
+{% set hero_aside %}
+<div class="grid grid-cols-3 gap-5 text-left lg:text-right">
+  <div><strong class="block font-display text-3xl font-normal text-ink">{{ invoices|length }}</strong><span class="text-xs text-ink-faint">open items</span></div>
+  <div><strong class="block font-display text-3xl font-normal text-exception">{{ exception_count }}</strong><span class="text-xs text-ink-faint">exceptions</span></div>
+  <div><strong class="block font-display text-3xl font-normal text-blocked">{{ hold_count }}</strong><span class="text-xs text-ink-faint">holds / blocks</span></div>
+</div>
+{% endset %}
+
+<div>
+{{ page_hero(visual="queue", eyebrow="Human review and approval control", compact=false, title=hero_title, description=hero_description, actions=hero_actions, aside=hero_aside) }}
+
+<div class="editorial-shell py-14 sm:py-20">
+  <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p class="section-marker">Live approval backlog</p>
+      <h2 class="display-lg mt-3 text-ink">AP review queue</h2>
+    </div>
+    <p class="max-w-md text-xs leading-relaxed text-ink-faint sm:text-right">Role checks and required verification notes are enforced on the server, not trusted from the interface.</p>
+  </div>
+
+  {% if invoices|length == 0 %}
+  <p class="mt-6 rounded border border-rule bg-paper-raised/50 px-4 py-3 text-sm text-ink-muted">
+    No processed invoices yet — run the five guided scenarios on <a href="/demo" class="underline decoration-rule-strong underline-offset-2 hover:decoration-ink">/demo</a> to populate the queue.
+  </p>
+  {% endif %}
+
+  {% if invoices|length > 0 %}
+  <form method="get" action="/queue" class="mt-6 flex flex-wrap items-center gap-3 text-xs">
+    <span class="text-ink-faint">Filter:</span>
+    <select name="supplier" onchange="this.form.submit()" class="rounded border border-rule bg-paper px-2 py-1 text-ink">
+      <option value="">All suppliers</option>
+      {% for s in suppliers %}
+      <option value="{{ s }}" {% if supplier_param == s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <select name="property" onchange="this.form.submit()" class="rounded border border-rule bg-paper px-2 py-1 text-ink">
+      <option value="">All properties</option>
+      {% for code, name in properties %}
+      <option value="{{ code }}" {% if property_param == code %}selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+    {% if supplier_param or property_param %}
+    <a href="/queue" class="text-ink-muted underline decoration-rule-strong underline-offset-2 hover:decoration-ink">Clear filters</a>
+    {% endif %}
+  </form>
+  {% endif %}
+
+  <div class="mt-8 space-y-10">
+    {% for outcome in groups_order %}
+    {% set group_items = invoices | selectattr("outcome", "equalto", outcome) | list %}
+    {% if group_items|length > 0 %}
+    <section>
+      <div class="mb-3 flex items-center gap-3 border-b border-rule-strong pb-2">
+        {{ outcome_badge(outcome) }}
+        <span class="font-tabular text-xs text-ink-faint">
+          {{ group_items|length }} invoice{{ "" if group_items|length == 1 else "s" }}
+        </span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[760px] text-left text-sm">
+          <thead>
+            <tr class="text-[11px] uppercase tracking-wide text-ink-faint">
+              <th class="pb-2 pr-4 font-medium">Invoice</th>
+              <th class="pb-2 pr-4 font-medium">Amount</th>
+              <th class="pb-2 pr-4 font-medium">Reason</th>
+              <th class="pb-2 pr-4 font-medium">Owner</th>
+              <th class="pb-2 font-medium">Review</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-rule">
+            {% for item in group_items %}
+            <tr>
+              <td class="min-w-0 py-3 pr-4 align-top">
+                {% if item.scenarioKey %}
+                <a href="/demo?scenario={{ item.scenarioKey }}" class="font-medium text-ink underline decoration-rule-strong underline-offset-2 hover:decoration-ink">{{ item.invoiceNumber or "—" }}</a>
+                {% else %}
+                <span class="font-medium text-ink">{{ item.invoiceNumber or "—" }}</span>
+                {% endif %}
+                <div class="truncate text-xs text-ink-faint">{{ item.supplierName or "Unknown supplier" }}</div>
+              </td>
+              <td class="py-3 pr-4 align-top font-tabular text-ink">{{ "$" ~ item.total if item.total else "—" }}</td>
+              <td class="max-w-xs min-w-0 py-3 pr-4 align-top text-xs text-ink-muted">
+                {{ (item.reason[:140] ~ "…") if item.reason|length > 140 else item.reason }}
+              </td>
+              <td class="py-3 pr-4 align-top text-xs text-ink-muted">{{ owner_from_route(item.approvalRoute) }}</td>
+              <td class="min-w-[280px] py-3 align-top">
+                {% if item.resolution %}
+                <div class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium {{ 'bg-[var(--ready-bg)] text-ready' if item.resolution.action == 'approved' else 'bg-[var(--blocked-bg)] text-blocked' }}">
+                  {{ "Approved" if item.resolution.action == "approved" else "Rejected" }} by {{ item.resolution.actorName }} ({{ owner_from_route([item.resolution.actorRole]) }})
+                </div>
+                {% else %}
+                <div class="w-full max-w-xs space-y-1.5" data-queue-row data-invoice-id="{{ item.invoiceId }}">
+                  <div class="flex gap-1.5">
+                    <input type="text" class="qra-name w-24 min-w-0 rounded border border-rule bg-paper px-1.5 py-1 text-xs text-ink placeholder:text-ink-faint" placeholder="Your name">
+                    <select class="qra-role min-w-0 flex-1 rounded border border-rule bg-paper px-1.5 py-1 text-xs text-ink">
+                      {% set default_role = item.approvalRoute[0] if item.approvalRoute else "ap_review_team" %}
+                      {% for r in role_options %}
+                      <option value="{{ r.value }}" {% if r.value == default_role %}selected{% endif %}>{{ r.label }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <textarea class="qra-comment w-full resize-none rounded border border-rule bg-paper px-1.5 py-1 text-xs text-ink placeholder:text-ink-faint" rows="2" placeholder="{{ 'Verification note (required to approve)' if item.outcome == 'blocked' else 'Comment (optional unless rejecting)' }}"></textarea>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <button type="button" data-action="approved" class="qra-btn rounded bg-[var(--ready-bg)] px-2 py-1 text-[11px] font-medium text-ready hover:opacity-80 disabled:opacity-50">Approve</button>
+                    <button type="button" data-action="rejected" class="qra-btn rounded bg-[var(--blocked-bg)] px-2 py-1 text-[11px] font-medium text-blocked hover:opacity-80 disabled:opacity-50">Reject</button>
+                    <button type="button" data-action="commented" class="qra-btn rounded border border-rule px-2 py-1 text-[11px] font-medium text-ink-muted hover:bg-paper-raised disabled:opacity-50">Comment</button>
+                    <select class="qra-reassign-to rounded border border-rule bg-paper px-1 py-1 text-[11px] text-ink">
+                      {% for r in role_options %}
+                      <option value="{{ r.value }}">→ {{ r.label }}</option>
+                      {% endfor %}
+                    </select>
+                    <button type="button" data-action="reassigned" class="qra-btn rounded border border-rule px-2 py-1 text-[11px] font-medium text-ink-muted hover:bg-paper-raised disabled:opacity-50">Reassign</button>
+                  </div>
+                  <p class="qra-error hidden text-[11px] text-blocked"></p>
+                </div>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-2 text-xs italic text-ink-faint">{{ outcome_descriptions[outcome] }}</p>
+    </section>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+{{ recruiter_proof(title="Human review is a product capability, not a disclaimer.", description="The queue demonstrates approval routing, separation of duties, verification requirements, durable comments, and audit history around model-assisted work.") }}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/queue.js" defer></script>
+{% endblock %}

@@ -1,0 +1,13 @@
+{
+  "name": "ledgerguard-styles",
+  "private": true,
+  "description": "Build-time-only Tailwind CSS compiler. Not a runtime dependency of the Python app — output.css is generated once and checked into ../ledgerguard/static/css/, so the deployed app never needs Node.",
+  "scripts": {
+    "build": "tailwindcss -i ./input.css -o ../ledgerguard/static/css/globals.css --minify",
+    "watch": "tailwindcss -i ./input.css -o ../ledgerguard/static/css/globals.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4",
+    "tailwindcss": "^4"
+  }
+}

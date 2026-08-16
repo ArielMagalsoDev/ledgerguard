@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% from "partials/page_hero.html" import page_hero %}
+{% from "partials/recruiter_proof.html" import recruiter_proof %}
+
+{% block title %}Case study — LedgerGuard{% endblock %}
+{% block meta_description %}How Ariel Magalso designed and built a controlled AI invoice-exception workflow.{% endblock %}
+
+{% block content %}
+{% set sections = [
+  {"title": "The problem", "body": "Accounts-payable teams repeatedly copy invoice data, verify arithmetic, search for purchase orders and receipts, check for duplicates, and decide who must review an exception. The work is repetitive, but a wrong answer can create a real financial loss."},
+  {"title": "The design decision", "body": "AI is used where documents are variable: locating and extracting candidate fields and drafting explanations. Code handles money, identity, duplicate rules, tolerances, routing, permissions, and idempotency. A model never decides that an invoice is financially safe."},
+  {"title": "What I built", "body": "I independently designed and implemented the FastAPI application, Claude extraction pipeline, evidence alignment, PostgreSQL data model, matching and control engine, five-scenario workbench, approval queue, evaluation harness, operations dashboard, sandbox accounting adapter, and deployment."},
+  {"title": "How risk is controlled", "body": "Every extracted field must point to document evidence. Monetary values are recalculated with decimal-safe code. Bank-detail changes are blocked, duplicate identity survives renamed files, embedded instructions remain untrusted document text, and every proposed external write carries an idempotency key."},
+  {"title": "How it is evaluated", "body": "The evaluation runner sends labeled fictional invoices through the actual extraction, alignment, matching, and decision pipeline. Held-out and development splits are reported separately, failures remain visible, and critical false clearances are measured independently from field-level extraction errors."},
+  {"title": "Current limitations", "body": "This is a portfolio demonstration, not a customer deployment. All entities and financial data are fictional. The public workflow intentionally stops before executing an accounting write or payment, and the evaluation set is still small compared with a production document population."},
+] %}
+
+{% set hero_title %}Building AI automation that never moves money on a <span class="hero-halftone block">guess.</span>{% endset %}
+{% set hero_description %}LedgerGuard is a solo full-stack portfolio project by Ariel Magalso, created to demonstrate controlled, measurable AI automation for a financially sensitive workflow.{% endset %}
+{% set hero_actions %}
+<a href="{{ AUTHOR.repository }}" target="_blank" rel="noopener noreferrer" class="btn-pill btn-pill-primary">View source</a>
+<a href="mailto:{{ AUTHOR.email }}" class="btn-pill btn-pill-outline">Contact Ariel</a>
+{% endset %}
+{% set hero_aside %}<span class="font-tabular text-xs text-ink-faint">Solo build · product to deployment</span>{% endset %}
+
+<div>
+{{ page_hero(visual="case-study", eyebrow="Recruiter case study · 5 minute read", compact=false, title=hero_title, description=hero_description, actions=hero_actions, aside=hero_aside) }}
+
+<section class="editorial-shell py-16 sm:py-24">
+  <dl class="grid border-y border-rule sm:grid-cols-3">
+    <div class="border-b border-rule py-6 sm:border-b-0 sm:border-r sm:px-6 sm:first:pl-0 sm:last:border-r-0">
+      <dt class="font-tabular text-[11px] uppercase tracking-wide text-ink-faint">Role</dt>
+      <dd class="mt-2 text-sm leading-relaxed text-ink">Solo AI automation design and engineering</dd>
+    </div>
+    <div class="border-b border-rule py-6 sm:border-b-0 sm:border-r sm:px-6 sm:first:pl-0 sm:last:border-r-0">
+      <dt class="font-tabular text-[11px] uppercase tracking-wide text-ink-faint">Stack</dt>
+      <dd class="mt-2 text-sm leading-relaxed text-ink">FastAPI · Claude · PostgreSQL · Docker</dd>
+    </div>
+    <div class="border-b border-rule py-6 sm:border-b-0 sm:border-r sm:px-6 sm:first:pl-0 sm:last:border-r-0">
+      <dt class="font-tabular text-[11px] uppercase tracking-wide text-ink-faint">Proof</dt>
+      <dd class="mt-2 text-sm leading-relaxed text-ink">Live pipeline · evals · audit history</dd>
+    </div>
+  </dl>
+
+  <div class="mt-8 flex flex-wrap gap-x-6 gap-y-3 border-b border-rule pb-8 text-sm font-semibold">
+    <a href="/demo" class="inline-flex items-center gap-2 hover:opacity-55">Run the live demo →</a>
+    <a href="/evals" class="inline-flex items-center gap-2 hover:opacity-55">Inspect evaluations →</a>
+    <a href="/architecture" class="inline-flex items-center gap-2 hover:opacity-55">See the architecture →</a>
+    <a href="/operations" class="inline-flex items-center gap-2 hover:opacity-55">View operations →</a>
+  </div>
+
+  <div class="mx-auto mt-24 max-w-5xl space-y-20">
+    {% for section in sections %}
+    <article class="grid gap-5 sm:grid-cols-[9rem_1fr] sm:gap-12">
+      <p class="font-tabular text-xs text-ink-faint">0{{ loop.index }} / 0{{ sections|length }}</p>
+      <div>
+        <h2 class="font-display text-4xl font-medium tracking-[-0.045em] text-ink">{{ section.title }}</h2>
+        <p class="mt-5 max-w-3xl text-lg leading-relaxed text-ink-muted">{{ section.body }}</p>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+
+  <div class="mt-24 flex flex-col gap-8 rounded-[28px] border border-rule bg-paper-raised p-8 text-ink shadow-[0_24px_70px_-56px_rgba(19,19,22,.55)] sm:flex-row sm:items-center sm:justify-between sm:p-12">
+    <div>
+      <h2 class="font-display text-4xl font-medium tracking-[-0.045em] text-ink">Inspect the system, not just the summary.</h2>
+      <p class="mt-3 text-sm text-ink-muted">Run five controlled scenarios and inspect every field, rule, and decision.</p>
+    </div>
+    <a href="/demo" class="btn-pill accent-panel shrink-0">Open the workbench →</a>
+  </div>
+</section>
+
+{{ recruiter_proof(title="The case study connects design decisions to working evidence.", description="Continue into the live workbench, inspect the source and evaluations, or contact Ariel about AI automation and workflow-engineering opportunities.") }}
+</div>
+{% endblock %}

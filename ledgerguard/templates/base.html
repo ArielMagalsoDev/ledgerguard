@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" data-scroll-behavior="smooth" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% set page_title = self.title() %}
+  {% set page_description = self.meta_description() %}
+  <title>{% block title %}Ariel Magalso — AI Engineer | LedgerGuard{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Recruiter portfolio for Ariel Magalso, an AI Engineer building measurable, evidence-linked workflows with deterministic safeguards and human review.{% endblock %}">
+
+  {% set og_image = request.url_for('static', path='og-image.png') %}
+  <meta property="og:title" content="{{ page_title }}">
+  <meta property="og:description" content="{{ page_description }}">
+  <meta property="og:image" content="{{ og_image }}">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="LedgerGuard — AI-assisted invoice-exception automation by Ariel Magalso">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ page_title }}">
+  <meta name="twitter:description" content="{{ page_description }}">
+  <meta name="twitter:image" content="{{ og_image }}">
+  <meta name="twitter:image:alt" content="LedgerGuard — AI-assisted invoice-exception automation by Ariel Magalso">
+
+  <link rel="icon" href="/static/icon.png" type="image/png" sizes="512x512">
+  <link rel="shortcut icon" href="/static/favicon.ico">
+  <link rel="apple-touch-icon" href="/static/icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font-outfit: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+      --font-geist-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', monospace;
+    }
+  </style>
+
+  <link rel="stylesheet" href="/static/css/globals.css">
+  {% block head %}{% endblock %}
+</head>
+<body class="flex min-h-full flex-col bg-paper text-ink">
+  {% include "partials/header.html" %}
+  <main class="flex-1">{% block content %}{% endblock %}</main>
+  {% include "partials/footer.html" %}
+
+  <script src="/static/js/motion.js"></script>
+  <script src="/static/js/nav.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

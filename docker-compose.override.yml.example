@@ -1,0 +1,16 @@
+# VPS-only: copy to docker-compose.override.yml on the server (deploys never
+# overwrite it) to route the web container through the host-mode Traefik
+# that terminates HTTPS (Let's Encrypt) in front of the stack.
+services:
+  web:
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.ledgerguard.rule=Host(`ledgerguard.arielmagalso.com`)
+      - traefik.http.routers.ledgerguard.entrypoints=websecure
+      - traefik.http.routers.ledgerguard.tls.certresolver=letsencrypt
+      # Traefik's Docker provider dials the container's own bridge-network IP
+      # and internal listen port (8000, per the uvicorn command below) even
+      # when Traefik itself runs in host network mode — NOT the host-published
+      # port from docker-compose.yml (8001, chosen only to avoid colliding
+      # with another stack's published 8000 on the same host).
+      - traefik.http.services.ledgerguard.loadbalancer.server.port=8000

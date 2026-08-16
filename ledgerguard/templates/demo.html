@@ -1,0 +1,559 @@
+{% extends "base.html" %}
+{% from "partials/page_hero.html" import page_hero %}
+{% from "partials/outcome_badge.html" import outcome_badge %}
+{% from "partials/recruiter_proof.html" import recruiter_proof %}
+
+{% block title %}AP Workbench — LedgerGuard demo{% endblock %}
+{% block meta_description %}Five guided fictional invoice scenarios, evidence-linked end to end.{% endblock %}
+
+{% block content %}
+
+{# -------------------------------------------------------------------------
+   Local helpers. Inline SVG icon macros used by the workbench panels.
+   `color` defaults to 'currentColor' so a Tailwind text-* class on `cls`
+   controls the stroke color.
+------------------------------------------------------------------------- #}
+{% macro icon(name, cls='', color='currentColor') -%}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="{{ cls }}" style="color: {{ color }};" aria-hidden="true">{% if name == 'check-circle-2' %}<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>{% elif name == 'x-circle' %}<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>{% elif name == 'alert-triangle' %}<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>{% elif name == 'minus-circle' %}<circle cx="12" cy="12" r="10"/><path d="M8 12h8"/>{% elif name == 'circle-check' %}<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>{% elif name == 'circle-help' %}<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>{% elif name == 'alert-circle' %}<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>{% elif name == 'circle-slash' %}<circle cx="12" cy="12" r="10"/><line x1="9" y1="9" x2="15" y2="15"/>{% elif name == 'bot' %}<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>{% elif name == 'cpu' %}<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/>{% elif name == 'user' %}<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>{% elif name == 'shield-alert' %}<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 8v4"/><path d="M12 16h.01"/>{% elif name == 'radio' %}<path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/>{% elif name == 'upload-cloud' %}<path d="M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/>{% endif %}</svg>
+{%- endmacro %}
+
+{% macro tier_badge(tier) -%}
+{%- set color = TIER_COLOR[tier] -%}
+<span class="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide" style="color: {{ color }}; background-color: {{ color }}1a;">{{ tier }}</span>
+{%- endmacro %}
+
+{% macro format_route(role) -%}
+{%- set parts = role.split(':') -%}
+{%- set key = parts[0] -%}
+{%- set label = ROUTE_LABELS[key] if key in ROUTE_LABELS else key.replace('_', ' ') -%}
+{%- if parts | length > 1 -%}{{ label }} — {{ parts[1] }}{%- else -%}{{ label }}{%- endif -%}
+{%- endmacro %}
+
+{% set KIND_CLASS = {
+  'header': 'font-display text-base font-semibold text-ink',
+  'meta': 'font-tabular text-[13px] text-ink-muted',
+  'table-header': 'font-tabular text-[11px] uppercase tracking-wide text-ink-faint border-b border-rule-strong pb-1 mt-2',
+  'line-item': 'font-tabular text-[11px] sm:text-[13px] text-ink',
+  'totals': 'font-tabular text-[11px] sm:text-[13px] text-ink text-right',
+  'notes': 'text-[13px] italic text-ink-muted',
+  'footer': 'text-[11px] text-ink-faint',
+} %}
+
+{% set CONTROL_STATUS_META = {
+  'passed':         {'icon': 'check-circle-2', 'color': 'var(--ready)',      'label': 'Passed'},
+  'failed':         {'icon': 'x-circle',       'color': 'var(--blocked)',    'label': 'Failed'},
+  'warning':        {'icon': 'alert-triangle', 'color': 'var(--exception)',  'label': 'Warning'},
+  'not_applicable': {'icon': 'minus-circle',   'color': 'var(--ink-faint)',  'label': 'N/A'},
+} %}
+
+{% set FIELD_STATUS_META = {
+  'verified':    {'icon': 'circle-check', 'color': 'var(--ready)',     'label': 'Verified'},
+  'uncertain':   {'icon': 'circle-help',  'color': 'var(--exception)', 'label': 'Uncertain'},
+  'conflicting': {'icon': 'alert-circle', 'color': 'var(--blocked)',   'label': 'Conflicting'},
+  'missing':     {'icon': 'circle-slash', 'color': 'var(--ink-faint)', 'label': 'Missing'},
+} %}
+
+{% set TIER_COLOR = {
+  'exact': 'var(--ready)', 'partial': 'var(--exception)', 'probable': 'var(--exception)',
+  'ambiguous': 'var(--exception)', 'none': 'var(--ink-faint)',
+} %}
+
+{% set ACTOR_META = {
+  'system':   {'icon': 'cpu', 'label': 'Deterministic code'},
+  'ai_model': {'icon': 'bot', 'label': 'AI model'},
+  'human':    {'icon': 'user', 'label': 'Human'},
+} %}
+
+{% set HEADER_LABELS = {
+  'invoiceNumber': 'Invoice number', 'invoiceDate': 'Invoice date', 'dueDate': 'Due date',
+  'supplierName': 'Supplier name', 'supplierTaxId': 'Supplier tax ID', 'purchaseOrderNumber': 'PO number',
+  'currency': 'Currency', 'subtotal': 'Subtotal', 'tax': 'Tax', 'total': 'Total',
+  'remittanceDetails': 'Remittance details', 'notes': 'Notes (untrusted)',
+} %}
+{% set HEADER_ORDER = ['invoiceNumber', 'invoiceDate', 'dueDate', 'supplierName', 'supplierTaxId',
+  'purchaseOrderNumber', 'currency', 'subtotal', 'tax', 'total', 'remittanceDetails', 'notes'] %}
+
+{% set ROUTE_LABELS = {
+  'ap_review_team': 'AP review team', 'controller': 'Controller', 'finance_manager': 'Finance manager',
+  'regional_operations_manager': 'Regional operations manager', 'property_manager': 'Property manager',
+} %}
+
+{% if scenarios %}
+{% set live_count = scenarios | selectattr('is_live') | list | length %}
+{% set policy_version = scenarios[0].scenario.decision.policyVersion %}
+
+{% set hero_title %}One invoice. Every <span class="hero-halftone hero-two-row block">field, rule, and decision visible.</span>{% endset %}
+{% set hero_description %}Choose a scenario and inspect document evidence, deterministic controls, approval routing, latency, model cost, and audit history. Click any extracted field to trace it back to the source.{% endset %}
+{% set hero_aside %}
+<div class="font-tabular text-xs text-ink-faint">
+  <strong class="block font-display text-3xl font-normal text-ready">{{ live_count }}/{{ scenarios | length }}</strong>
+  live scenario results
+  <span class="mt-2 block">{{ policy_version }} · fictional data</span>
+</div>
+{% endset %}
+{% set hero_actions %}
+<a href="/architecture" class="btn-pill btn-pill-primary">How the controls work</a>
+<a href="/evals" class="btn-pill btn-pill-outline">View evaluations</a>
+{% endset %}
+
+{{ page_hero(visual='demo', eyebrow='Interactive product proof', compact=False, title=hero_title, description=hero_description, actions=hero_actions, aside=hero_aside) }}
+
+<div class="editorial-shell pb-4 pt-14 sm:pt-20">
+  <div class="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p class="section-marker">Choose a controlled scenario</p>
+      <h2 class="display-lg mt-3 text-ink">AP workbench</h2>
+    </div>
+    <p class="max-w-lg text-xs leading-relaxed text-ink-faint sm:text-right">All suppliers, invoices, purchase orders, receipts, and amounts are fictional.</p>
+  </div>
+
+  <div>
+    <div class="grid min-w-0 grid-cols-1 gap-3 overflow-visible pb-0 sm:grid-cols-2 lg:grid-cols-5">
+      {% for item in scenarios %}
+      {% set scenario = item.scenario %}
+      {% set meta = OUTCOME_META[scenario.outcome] %}
+      <button
+        type="button"
+        class="group relative flex min-h-48 min-w-0 flex-col overflow-hidden rounded-[var(--radius-card)] border p-4 text-left transition-all {{ 'border-accent bg-paper-raised shadow-[inset_0_0_0_1px_var(--accent)]' if loop.first else 'border-rule bg-paper-raised hover:-translate-y-0.5 hover:border-rule-strong' }}"
+        data-role="scenario-card"
+        data-scenario-id="{{ scenario.id }}"
+        data-base-class="group relative flex min-h-48 min-w-0 flex-col overflow-hidden rounded-[var(--radius-card)] border p-4 text-left transition-all"
+        data-active-extra="border-accent bg-paper-raised shadow-[inset_0_0_0_1px_var(--accent)]"
+        data-inactive-extra="border-rule bg-paper-raised hover:-translate-y-0.5 hover:border-rule-strong"
+        aria-pressed="{{ 'true' if loop.first else 'false' }}"
+      >
+        <span class="absolute inset-x-0 top-0 h-1.5 bg-accent {{ '' if loop.first else 'hidden' }}" data-role="active-bar" aria-hidden="true"></span>
+        <div class="flex items-start justify-between gap-3">
+          <span
+            class="font-tabular text-4xl font-medium leading-none tracking-tight {{ 'text-accent' if loop.first else 'text-rule-strong' }}"
+            data-role="order-number"
+            data-base-class="font-tabular text-4xl font-medium leading-none tracking-tight"
+            data-active-class="text-accent"
+            data-inactive-class="text-rule-strong"
+          >0{{ scenario.order }}</span>
+          <span class="mt-1 h-2 w-2 shrink-0 rounded-full" style="background-color: {{ meta.color }};" aria-hidden="true"></span>
+        </div>
+        <div class="mt-7 text-base font-semibold leading-tight text-ink">{{ scenario.shortLabel }}</div>
+        <div class="mt-2 line-clamp-2 text-xs leading-relaxed text-ink-muted">{{ scenario.tagline }}</div>
+        <div class="mt-auto flex items-end justify-between gap-3 pt-5">
+          <span class="font-tabular text-[10px] font-medium uppercase tracking-wide" style="color: {{ meta.color }};">{{ meta.short }}</span>
+          <span class="text-xl leading-none text-ink-faint transition-transform group-hover:translate-x-0.5 group-hover:text-accent" aria-hidden="true">→</span>
+        </div>
+      </button>
+      {% endfor %}
+    </div>
+
+    {% if upload_sandbox_enabled %}
+    <a href="/try" class="mt-3 flex items-center justify-between gap-4 rounded-[var(--radius-card)] border border-dashed border-rule-strong bg-paper-raised px-5 py-4 text-sm font-medium text-ink transition-colors hover:border-accent">
+      <span>Have an invoice of your own?</span>
+      <span class="flex items-center gap-2">
+        Upload and test it
+        {{ icon('upload-cloud', 'h-4 w-4') }}
+      </span>
+    </a>
+    {% endif %}
+  </div>
+
+  {% for item in scenarios %}
+  {% set scenario = item.scenario %}
+  {% set is_live = item.is_live %}
+  {% set flagged_class = 'bg-[var(--exception-bg)] ring-1 ring-exception/40' %}
+  {% set highlight_class = 'bg-[var(--ready-bg)] ring-1 ring-ready/40' %}
+  <div class="workbench-panel {{ '' if loop.first else 'hidden' }}" data-scenario-id="{{ scenario.id }}">
+
+    {% if scenario.id == 'prompt-injection' %}
+    <div class="mt-4 flex items-start gap-2.5 rounded border border-exception/40 bg-[var(--exception-bg)] px-4 py-3">
+      {{ icon('alert-triangle', 'mt-0.5 h-4 w-4 shrink-0 text-exception') }}
+      <p class="text-sm text-ink">
+        This invoice contains text written to manipulate an AI reader —
+        look for the highlighted notes line in the document, and the
+        flagged control at the bottom of the checklist.
+      </p>
+    </div>
+    {% endif %}
+
+    <div class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-card)] border border-rule bg-paper-raised px-5 py-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <h2 class="font-display text-xl font-normal text-ink">{{ scenario.title }}</h2>
+          {{ outcome_badge(scenario.outcome) }}
+          <span
+            title="{{ 'Real Claude extraction + deterministic matching/control output from the database, tagged by python -m ledgerguard.run_demo_pipeline.' if is_live else 'No live pipeline run found for this scenario yet — showing the static fixture. Run `python -m ledgerguard.run_demo_pipeline` to make this real.' }}"
+            class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide {{ 'bg-[var(--ready-bg)] text-ready' if is_live else 'bg-paper-raised text-ink-faint' }}"
+          >
+            {{ icon('radio', 'h-2.5 w-2.5') }}
+            {{ 'Live' if is_live else 'Fixture' }}
+          </span>
+        </div>
+        <p class="mt-1 text-sm text-ink-muted">{{ scenario.tagline }}</p>
+      </div>
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 gap-4 rounded border border-rule bg-paper-raised/50 p-4 sm:grid-cols-2 sm:p-5">
+      <div>
+        <h3 class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">What happened</h3>
+        <p class="mt-1 text-sm leading-relaxed text-ink">{{ scenario.narrative.whatHappened }}</p>
+      </div>
+      <div>
+        <h3 class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Why it matters</h3>
+        <p class="mt-1 text-sm leading-relaxed text-ink">{{ scenario.narrative.whyItMatters }}</p>
+      </div>
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+
+      {# --- Invoice document panel --- #}
+      <div class="card-paper p-3.5 sm:p-6">
+        <div class="mb-3 flex items-center justify-between border-b border-rule-strong pb-2">
+          <span class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Source document — page 1</span>
+          <span class="text-[10px] uppercase tracking-wide text-ink-faint">Rendered from extracted text</span>
+        </div>
+        <div class="space-y-1.5" data-doc-lines data-highlight-class="{{ highlight_class }}">
+          {% for line in scenario.documentLines %}
+          {% set is_flagged = line.kind == 'notes' and scenario.extracted.get('notes') %}
+          <p
+            class="{{ KIND_CLASS[line.kind] }} rounded px-1.5 py-0.5 transition-colors {{ flagged_class if is_flagged else '' }}"
+            data-line-text="{{ line.text }}"
+            {% if is_flagged %}data-flagged-class="{{ flagged_class }}"{% endif %}
+          >{{ line.text }}</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      {# --- Extracted data panel --- #}
+      <div class="card-paper p-5 sm:p-6">
+        <div class="mb-3 border-b border-rule-strong pb-2">
+          <span class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Extracted data</span>
+        </div>
+        <div class="divide-y divide-rule">
+          {% for key in HEADER_ORDER %}
+          {% set field = scenario.extracted.get(key) %}
+          {% if field %}
+          {% set fmeta = FIELD_STATUS_META[field.status] %}
+          {% set evidence_text = field.evidence[0].text if field.evidence else none %}
+          {% set is_money = key in ['subtotal', 'tax', 'total'] %}
+          <button
+            type="button"
+            class="flex w-full items-start gap-2.5 rounded px-2 py-2 text-left transition-colors {{ 'cursor-pointer hover:bg-ink/5' if evidence_text else 'cursor-default' }}"
+            {% if not evidence_text %}disabled{% endif %}
+            {% if evidence_text %}data-field-highlight="{{ evidence_text }}" data-selected-class="bg-[var(--ready-bg)] ring-1 ring-ready/40"{% endif %}
+          >
+            {{ icon(fmeta.icon, 'mt-0.5 h-3.5 w-3.5 shrink-0', fmeta.color) }}
+            <div class="min-w-0 flex-1">
+              <div class="flex items-baseline justify-between gap-2">
+                <span class="text-[11px] uppercase tracking-wide text-ink-faint">{{ HEADER_LABELS[key] }}</span>
+                <span class="shrink-0 text-[10px] text-ink-faint">{{ (field.confidence * 100) | round | int }}%</span>
+              </div>
+              <div class="{{ 'font-tabular text-sm text-ink' if is_money else ('text-sm italic text-ink-muted break-words' if key == 'notes' else 'font-tabular text-sm text-ink break-words') }}">
+                {% if field.value %}{{ field.value }}{% else %}<span class="italic text-ink-faint">not present</span>{% endif %}
+              </div>
+            </div>
+          </button>
+          {% endif %}
+          {% endfor %}
+        </div>
+
+        <div class="mt-4 border-t border-rule-strong pt-3">
+          <span class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Line items ({{ scenario.extracted.lineItems | length }})</span>
+          <div class="mt-2 overflow-x-auto">
+            <table class="w-full min-w-[420px] text-sm">
+              <thead>
+                <tr class="text-left text-[10px] uppercase tracking-wide text-ink-faint">
+                  <th class="pb-1.5 pr-2 font-medium">Description</th>
+                  <th class="pb-1.5 pr-2 text-right font-medium">Qty</th>
+                  <th class="pb-1.5 pr-2 text-right font-medium">Unit price</th>
+                  <th class="pb-1.5 text-right font-medium">Line total</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-rule">
+                {% for line in scenario.extracted.lineItems %}
+                {% set li_evidence = line.description.evidence[0].text if line.description.evidence else none %}
+                <tr
+                  class="cursor-pointer transition-colors hover:bg-ink/5"
+                  {% if li_evidence %}data-field-highlight="{{ li_evidence }}" data-selected-class="bg-[var(--ready-bg)]"{% endif %}
+                >
+                  <td class="py-1.5 pr-2 text-ink">{{ line.description.value }}</td>
+                  <td class="py-1.5 pr-2 text-right font-tabular text-ink-muted">{{ line.quantity.value }}</td>
+                  <td class="py-1.5 pr-2 text-right font-tabular text-ink-muted">${{ line.unitPrice.value }}</td>
+                  <td class="py-1.5 text-right font-tabular text-ink">${{ line.lineTotal.value }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {# --- Match evidence panel --- #}
+      <div class="card-paper space-y-5 p-5 sm:p-6">
+        <div class="border-b border-rule-strong pb-2">
+          <span class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Match evidence</span>
+        </div>
+
+        <div>
+          <div class="mb-2 flex items-center justify-between">
+            <h3 class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Supplier identity</h3>
+            {{ tier_badge(scenario.match.supplierMatch) }}
+          </div>
+          <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+            <div class="text-ink-faint">Invoice tax ID</div>
+            <div class="text-ink-faint">Approved master</div>
+            <div class="font-tabular text-ink">{{ scenario.extracted.supplierTaxId.value }}</div>
+            <div class="font-tabular text-ink">{{ scenario.supplier.taxId }}</div>
+          </div>
+          <p class="mt-2 text-xs text-ink-muted">
+            {{ scenario.supplier.name }} · approved supplier since evidence on file, status
+            <span class="font-medium">{{ scenario.supplier.status }}</span>.
+          </p>
+        </div>
+
+        {% if scenario.purchaseOrder %}
+        {% set po = scenario.purchaseOrder %}
+        <div>
+          <div class="mb-2 flex items-center justify-between">
+            <h3 class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Purchase order — {{ po.number }}</h3>
+            {{ tier_badge(scenario.match.purchaseOrderMatch) }}
+          </div>
+          <p class="mb-2 text-xs text-ink-muted">
+            {{ po.property }} · not-to-exceed ${{ po.notToExceed }} · status {{ po.status }}
+          </p>
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[380px] text-xs">
+              <thead>
+                <tr class="text-left uppercase tracking-wide text-ink-faint">
+                  <th class="pb-1 pr-2 font-medium">Line</th>
+                  <th class="pb-1 pr-2 text-right font-medium">Approved qty</th>
+                  <th class="pb-1 text-right font-medium">Approved price</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-rule">
+                {% for poline in po.lines %}
+                {% set ns = namespace(invoice_line=none) %}
+                {% for li in scenario.extracted.lineItems %}
+                  {% if li.description.value == poline.description %}{% set ns.invoice_line = li %}{% endif %}
+                {% endfor %}
+                {% set price_differs = ns.invoice_line and (ns.invoice_line.unitPrice.value != poline.unitPrice) %}
+                {% set qty_differs = ns.invoice_line and ((ns.invoice_line.quantity.value | float) != (poline.approvedQuantity | float)) %}
+                <tr>
+                  <td class="py-1 pr-2 text-ink">{{ poline.description }}</td>
+                  <td class="py-1 pr-2 text-right font-tabular {{ 'font-semibold text-blocked' if qty_differs else 'text-ink-muted' }}">{{ poline.approvedQuantity }}</td>
+                  <td class="py-1 text-right font-tabular {{ 'font-semibold text-blocked' if price_differs else 'text-ink-muted' }}">${{ poline.unitPrice }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% set last_li = scenario.extracted.lineItems[-1] if scenario.extracted.lineItems else none %}
+          {% set ns2 = namespace(found=false) %}
+          {% for l in po.lines %}
+            {% if last_li and l.description == last_li.description.value %}{% set ns2.found = true %}{% endif %}
+          {% endfor %}
+          {% if not ns2.found and (scenario.extracted.lineItems | length) > (po.lines | length) %}
+          <p class="mt-2 rounded bg-[var(--exception-bg)] px-2 py-1.5 text-xs text-exception">
+            {{ (scenario.extracted.lineItems | length) - (po.lines | length) }} invoice line(s)
+            have no corresponding PO line.
+          </p>
+          {% endif %}
+        </div>
+        {% else %}
+        <div>
+          <h3 class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Purchase order</h3>
+          <p class="mt-2 text-xs text-ink-muted">
+            No PO reference — matched as a recurring non-PO service category
+            instead.
+          </p>
+        </div>
+        {% endif %}
+
+        {% if scenario.receipt %}
+        <div>
+          <h3 class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Goods / service receipt</h3>
+          <p class="mt-2 text-xs text-ink-muted">
+            {{ scenario.receipt.id }} · received {{ scenario.receipt.receivedDate }} by {{ scenario.receipt.receivedBy }} ·
+            confirms {{ scenario.receipt.lines | length }} line(s)
+          </p>
+        </div>
+        {% endif %}
+
+        <div>
+          <h3 class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Duplicate candidates</h3>
+          {% if scenario.match.duplicateCandidates | length == 0 %}
+          <p class="mt-2 text-xs text-ink-muted">None found.</p>
+          {% else %}
+          <div class="mt-2 space-y-2">
+            {% for candidate in scenario.match.duplicateCandidates %}
+            <div class="rounded border border-blocked/30 bg-[var(--blocked-bg)] p-2.5">
+              <div class="flex items-center justify-between">
+                <span class="font-tabular text-xs font-semibold text-blocked">{{ candidate.existingInvoiceId }}</span>
+                <span class="text-[10px] font-semibold uppercase tracking-wide text-blocked">{{ candidate.matchType }} match</span>
+              </div>
+              {% if scenario.duplicateOf %}
+              <p class="mt-1 text-xs text-ink-muted">
+                Recorded {{ scenario.duplicateOf.recordedAt[:10] }} from
+                <span class="font-tabular">{{ scenario.duplicateOf.originalFileName }}</span>
+              </p>
+              {% endif %}
+              <ul class="mt-1.5 flex flex-wrap gap-1">
+                {% for signal in candidate.matchedSignals %}
+                <li class="rounded bg-blocked/10 px-1.5 py-0.5 font-tabular text-[10px] text-blocked">{{ signal }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      {# --- Control checklist --- #}
+      <div class="card-paper p-5 sm:p-6">
+        <div class="mb-1 border-b border-rule-strong pb-2">
+          <span class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Control results ({{ scenario.controls | length }})</span>
+        </div>
+        <ul class="divide-y divide-rule">
+          {% for control in scenario.controls %}
+          {% set cmeta = CONTROL_STATUS_META[control.status] %}
+          <li class="flex gap-3 py-3">
+            {{ icon(cmeta.icon, 'mt-0.5 h-4 w-4 shrink-0', cmeta.color) }}
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span class="text-sm font-medium text-ink">{{ control.label }}</span>
+                <span class="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide" style="color: {{ cmeta.color }}; background-color: {{ cmeta.color }}1a;">{{ cmeta.label }}</span>
+                {% if control.blocking and control.status == 'failed' %}
+                <span class="text-[10px] font-semibold uppercase tracking-wide text-blocked">Blocks auto-approval</span>
+                {% endif %}
+              </div>
+              <p class="mt-1 text-sm leading-relaxed text-ink-muted">{{ control.reason }}</p>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+
+      {# --- Proposed action panel --- #}
+      <div class="card-paper space-y-4 p-5 sm:p-6">
+        <div class="flex items-center justify-between border-b border-rule-strong pb-2">
+          <span class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Proposed action</span>
+          {{ outcome_badge(scenario.decision.outcome, size='sm') }}
+        </div>
+
+        <p class="text-sm leading-relaxed text-ink">{{ scenario.decision.reason }}</p>
+
+        {% if scenario.decision.approvalRoute and (scenario.decision.approvalRoute | length) > 0 %}
+        <div>
+          <h4 class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Routed to</h4>
+          <ul class="mt-1.5 space-y-1">
+            {% for role in scenario.decision.approvalRoute %}
+            <li class="text-sm text-ink-muted">→ {{ format_route(role) }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        {% if scenario.decision.requiredActions | length > 0 %}
+        <div>
+          <h4 class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Required next actions</h4>
+          <ul class="mt-1.5 space-y-1.5">
+            {% for action in scenario.decision.requiredActions %}
+            <li class="flex gap-2 text-sm text-ink-muted">
+              {{ icon('shield-alert', 'mt-0.5 h-3.5 w-3.5 shrink-0 text-exception') }}
+              <span>{{ action }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        <div>
+          <h4 class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Accounting-system change</h4>
+          {% if scenario.decision.proposedAccountingChange %}
+          {% set change = scenario.decision.proposedAccountingChange %}
+          <div class="mt-2 rounded border border-rule-strong bg-paper p-3">
+            <div class="flex items-center justify-between">
+              <span class="font-tabular text-xs font-semibold uppercase tracking-wide text-ready">{{ change.action.replace('_', ' ') }}</span>
+              <span class="rounded bg-ready/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ready">Draft only — not posted</span>
+            </div>
+            <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+              <dt class="text-ink-faint">Cost center</dt>
+              <dd class="font-tabular text-ink">{{ change.costCenter }}</dd>
+              <dt class="text-ink-faint">Total</dt>
+              <dd class="font-tabular text-ink">${{ change.total }}</dd>
+              <dt class="text-ink-faint">Idempotency key</dt>
+              <dd class="break-all font-tabular text-ink-muted">{{ change.idempotencyKey }}</dd>
+            </dl>
+          </div>
+          {% else %}
+          <p class="mt-2 rounded border border-dashed border-rule-strong px-3 py-2 text-xs text-ink-muted">
+            Withheld — no draft is created until this invoice reaches
+            <span class="font-medium">ready for approval</span>.
+          </p>
+          {% endif %}
+        </div>
+
+        <p class="border-t border-rule pt-3 text-[11px] text-ink-faint">
+          Policy version {{ scenario.decision.policyVersion }} · workflow {{ scenario.decision.workflowId }}. No
+          payment is ever executed by this demo.
+        </p>
+      </div>
+
+      {# --- Audit trail --- #}
+      {% set audit_ns = namespace(total_latency=0, total_cost=0) %}
+      {% for e in scenario.auditEvents %}
+        {% set audit_ns.total_latency = audit_ns.total_latency + (e.latencyMs if (e.latencyMs is defined and e.latencyMs is not none) else 0) %}
+        {% set audit_ns.total_cost = audit_ns.total_cost + (e.costUsd if (e.costUsd is defined and e.costUsd is not none) else 0) %}
+      {% endfor %}
+      <div class="card-paper p-5 sm:p-6">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-rule-strong pb-2">
+          <span class="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">Audit history</span>
+          <span class="font-tabular text-xs text-ink-muted">{{ '%.1f' | format(audit_ns.total_latency / 1000) }}s total · ${{ '%.4f' | format(audit_ns.total_cost) }} total</span>
+        </div>
+        <ol class="relative space-y-0 border-l border-rule pl-4">
+          {% for event in scenario.auditEvents %}
+          {% set actor_meta = ACTOR_META[event.actor] %}
+          <li class="relative py-2.5">
+            <span class="absolute -left-[21px] top-3.5 h-2 w-2 rounded-full border-2 border-paper-raised bg-ink-faint"></span>
+            <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+              <div class="flex items-center gap-1.5">
+                {{ icon(actor_meta.icon, 'h-3 w-3 text-ink-faint') }}
+                <span class="text-sm font-medium text-ink">{{ event.label }}</span>
+              </div>
+              <span class="font-tabular text-[11px] text-ink-faint">{{ event.timestamp[11:19] }} UTC</span>
+            </div>
+            <p class="mt-0.5 pr-2 text-xs leading-relaxed text-ink-muted">{{ event.detail }}</p>
+            {% if (event.latencyMs is defined and event.latencyMs is not none) or (event.costUsd is defined and event.costUsd is not none) %}
+            <p class="mt-0.5 font-tabular text-[11px] text-ink-faint">
+              {% if event.latencyMs is defined and event.latencyMs is not none %}{{ event.latencyMs }}ms{% endif %}
+              {% if (event.latencyMs is defined and event.latencyMs is not none) and (event.costUsd is defined and event.costUsd is not none) %} · {% endif %}
+              {% if event.costUsd is defined and event.costUsd is not none %}${{ '%.4f' | format(event.costUsd) }}{% endif %}
+            </p>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ol>
+      </div>
+    </div>
+
+  </div>
+  {% endfor %}
+</div>
+
+{{ recruiter_proof(
+  title="This demo exposes the implementation, not just the happy path.",
+  description=(scenarios | length | string) ~ " scenarios demonstrate extraction provenance, arithmetic checks, matching, duplicate identity, bank-detail holds, prompt-injection handling, idempotency, and auditability.",
+  borderless=true
+) }}
+
+{% else %}
+<div class="editorial-shell py-20 text-center">
+  <p class="text-sm text-ink-muted">No demo scenarios are available right now — check back shortly.</p>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/demo.js"></script>
+{% endblock %}

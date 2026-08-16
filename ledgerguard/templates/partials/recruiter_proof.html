@@ -1,0 +1,28 @@
+{# Recruiter-facing proof panel linking to the engineering evidence pages. #}
+{% macro recruiter_proof(title="Inspect the engineering behind the interface.", description="Architecture, evaluations, source code, operational evidence, and current limitations are public.", borderless=false) %}
+<section class="recruiter-proof-wrap {{ 'section-tight-bottom' if borderless else 'section-hairline' }}">
+  <div class="recruiter-proof-panel editorial-shell grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+    <div>
+      <p class="section-marker recruiter-proof-marker">Built by Ariel</p>
+      <p class="mt-8 font-tabular text-sm uppercase leading-relaxed tracking-[0.12em] text-ink-faint sm:text-base">
+        Ariel Magalso<br>AI Engineer<br>Philippines · Remote
+      </p>
+    </div>
+    <div>
+      <h2 class="display-lg max-w-4xl text-ink">{{ title }}</h2>
+      <p class="mt-6 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">{{ description }}</p>
+      <div class="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
+        <a href="mailto:{{ AUTHOR.email }}" class="btn-pill accent-panel">
+          Contact Ariel <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+        <a href="{{ AUTHOR.repository }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-sm font-semibold text-ink hover:opacity-60">
+          Source code <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+        </a>
+        <a href="/case-study" class="inline-flex items-center gap-2 text-sm font-semibold text-ink hover:opacity-60">
+          Read case study <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endmacro %}

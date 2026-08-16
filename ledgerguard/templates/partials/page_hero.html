@@ -1,0 +1,49 @@
+{#
+  Shared page hero. Every visual variant ("demo", "queue",
+  "evals", "architecture", "operations", "case-study", "upload") renders the
+  exact same ContextVisual DOM — only the outer `context-visual-{{ visual }}`
+  class differs, and globals.css positions/colors each variant. Callers pass
+  title/description/actions/aside as pre-rendered HTML (mark trusted content
+  `| safe` at the call site, e.g. via `{% set description %}...{% endset %}`).
+#}
+{% macro page_hero(visual, eyebrow, title, description, actions="", aside="", compact=false) %}
+<section class="editorial-page-hero overflow-hidden border-b border-rule">
+  <div class="page-hero-grid" aria-hidden="true"></div>
+
+  <div class="context-visual context-visual-{{ visual }}" aria-hidden="true">
+    <div class="context-visual-glow"></div>
+    <div class="context-visual-frame">
+      <span class="visual-mark mark-a"></span>
+      <span class="visual-mark mark-b"></span>
+      <span class="visual-mark mark-c"></span>
+      <span class="visual-mark mark-d"></span>
+      <span class="visual-mark mark-e"></span>
+      <span class="visual-mark mark-f"></span>
+    </div>
+    <span class="context-visual-chip chip-a"></span>
+    <span class="context-visual-chip chip-b"></span>
+  </div>
+
+  <div class="editorial-shell relative z-10 grid gap-10 pb-20 pt-32 sm:pb-24 sm:pt-40 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+    <div class="page-hero-copy">
+      <div class="reveal" data-reveal>
+        <p class="section-marker editorial-eyebrow">{{ eyebrow }}</p>
+      </div>
+      <div class="reveal" data-reveal data-reveal-delay="100">
+        <h1 class="display-hero mt-7 max-w-5xl text-ink {{ 'hero-compact' if compact else '' }}">{{ title | safe }}</h1>
+      </div>
+      <div class="reveal" data-reveal data-reveal-delay="220">
+        <div class="mt-8 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">{{ description | safe }}</div>
+        {% if actions %}
+        <div class="mt-9 flex flex-wrap items-center gap-5">{{ actions | safe }}</div>
+        {% endif %}
+      </div>
+    </div>
+    {% if aside %}
+    <div class="reveal" data-reveal data-reveal-delay="320">
+      <div class="page-hero-aside lg:min-w-56 lg:text-right">{{ aside | safe }}</div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endmacro %}

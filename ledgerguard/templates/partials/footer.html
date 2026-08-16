@@ -1,0 +1,95 @@
+{% set footer_nav = [
+  {"href": "/demo", "label": "Demo", "group": "explore"},
+  {"href": "/case-study", "label": "Case study", "group": "explore"},
+  {"href": "/queue", "label": "Queue", "group": "evidence"},
+  {"href": "/evals", "label": "Evals", "group": "evidence"},
+  {"href": "/architecture", "label": "Architecture", "group": "evidence"},
+  {"href": "/operations", "label": "Operations", "group": "evidence"}
+] %}
+{% set social_nav = [
+  {"href": AUTHOR.linkedin, "label": "LinkedIn"},
+  {"href": AUTHOR.github, "label": "GitHub"},
+  {"href": AUTHOR.portfolio, "label": "Portfolio"}
+] %}
+
+<section class="mt-12 px-4 sm:mt-16 sm:px-5" aria-label="Open to opportunities">
+  <div class="mx-auto max-w-[1440px] overflow-hidden rounded-[32px] border border-rule bg-paper-raised text-ink shadow-[0_24px_70px_-56px_rgba(19,19,22,.55)]">
+    <div class="px-6 py-16 sm:px-10 sm:py-20 lg:px-16 lg:py-24">
+      <div class="reveal" data-reveal>
+        <p class="font-tabular text-xs uppercase tracking-[0.12em] text-ink-faint">Open to opportunities</p>
+        <div class="mt-8 grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <h2 class="display-xl max-w-4xl text-ink">
+              Need AI automation that can <span class="text-ink-muted">explain itself?</span>
+            </h2>
+            <p class="mt-6 max-w-2xl text-base leading-relaxed text-ink-muted">
+              I build measurable AI-assisted workflows with deterministic safeguards, visible evaluation, and
+              human review where the risk demands it.
+            </p>
+          </div>
+          <a href="mailto:{{ AUTHOR.email }}" class="btn-pill accent-panel shrink-0">
+            Contact Ariel <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="mt-20 px-4 pb-4 sm:px-5 sm:pb-5">
+  <div class="mx-auto max-w-[1440px] overflow-hidden rounded-[32px] bg-dark-bg text-dark-ink">
+    <div class="px-6 py-16 sm:px-10 sm:py-20 lg:px-16 lg:py-24">
+      <div class="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_0.8fr_0.8fr_1fr]">
+        <div>
+          <p class="font-display text-2xl font-semibold tracking-[-0.06em] text-white">
+            LedgerGuard<span class="text-accent">.</span>
+          </p>
+          <p class="mt-4 max-w-sm text-sm leading-relaxed text-white/55">
+            Independently designed and built by {{ AUTHOR.name }}, an {{ AUTHOR.role }}. Product design, full-stack
+            engineering, evaluation, database work, and deployment are part of this solo build.
+          </p>
+        </div>
+        <div>
+          <p class="font-tabular text-[11px] uppercase tracking-[0.12em] text-white/40">Explore</p>
+          <nav class="mt-4 flex flex-col gap-2.5 text-sm">
+            {% for item in footer_nav if item.group == "explore" %}
+            <a href="{{ item.href }}" class="text-white/60 transition-colors hover:text-white">{{ item.label }}</a>
+            {% endfor %}
+          </nav>
+        </div>
+        <div>
+          <p class="font-tabular text-[11px] uppercase tracking-[0.12em] text-white/40">Evidence</p>
+          <nav class="mt-4 flex flex-col gap-2.5 text-sm">
+            {% for item in footer_nav if item.group == "evidence" %}
+            <a href="{{ item.href }}" class="text-white/60 transition-colors hover:text-white">{{ item.label }}</a>
+            {% endfor %}
+          </nav>
+        </div>
+        <div>
+          <p class="font-tabular text-[11px] uppercase tracking-[0.12em] text-white/40">Connect</p>
+          <nav class="mt-4 flex flex-col gap-2.5 text-sm">
+            {% for item in social_nav %}
+            <a href="{{ item.href }}" target="_blank" rel="noopener noreferrer" class="text-white/60 transition-colors hover:text-white">{{ item.label }} ↗</a>
+            {% endfor %}
+            <a href="{{ AUTHOR.repository }}" target="_blank" rel="noopener noreferrer" class="text-white/60 transition-colors hover:text-white">Source code ↗</a>
+          </nav>
+        </div>
+      </div>
+
+      <div class="mt-14 border-t border-white/15 pt-7">
+        <p class="font-tabular text-[11px] leading-relaxed text-white/40">
+          LedgerGuard is a portfolio demonstration. Keystone Facilities Group, every supplier, purchase order,
+          invoice, and dollar figure is fictional. No workflow can execute a payment or accounting write.
+        </p>
+        <div class="mt-7 flex flex-col gap-2 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
+          <span>© {{ current_year }} {{ AUTHOR.name }}. All rights reserved.</span>
+          <a href="mailto:{{ AUTHOR.email }}" class="hover:text-white">{{ AUTHOR.email }}</a>
+        </div>
+      </div>
+
+      <p class="footer-wordmark mt-16 overflow-visible whitespace-nowrap font-display text-[clamp(4rem,12vw,11rem)] font-medium leading-[0.82] tracking-[-0.08em] text-white">
+        LedgerGuard<span class="text-accent">.</span>
+      </p>
+    </div>
+  </div>
+</footer>
