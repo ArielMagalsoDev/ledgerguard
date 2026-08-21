@@ -12,20 +12,35 @@ DECIDED_STATUSES = ("ready_for_approval", "exception_review", "duplicate_hold", 
 
 
 def get_operations_summary(db: Session) -> dict:
-    total_invoices = db.scalar(select(func.count()).select_from(Invoice)) or 0
+    # Evaluation cases deliberately traverse the real pipeline, but they are
+    # test evidence rather than operating workload. Keep them on /evals and
+    # exclude them from queue/backlog/throughput claims on /operations.
+    operational_invoices = db.scalars(
+        select(Invoice).where(~Invoice.submission_id.like("sub_eval_%"))
+    ).all()
+    operational_ids = [i.id for i in operational_invoices]
+    total_invoices = len(operational_invoices)
 
-    decided_invoices = db.scalars(select(Invoice).where(Invoice.status.in_(DECIDED_STATUSES))).all()
+    decided_invoices = [i for i in operational_invoices if i.status in DECIDED_STATUSES]
     decided_ids = [i.id for i in decided_invoices]
 
-    total_audit_events = db.scalar(select(func.count()).select_from(AuditEvent)) or 0
+    total_audit_events = (
+        db.scalar(select(func.count()).select_from(AuditEvent).where(AuditEvent.invoice_id.in_(operational_ids))) or 0
+        if operational_ids
+        else 0
+    )
 
-    latency_cost_rows = db.execute(
-        select(func.coalesce(func.sum(AuditEvent.latency_ms), 0), func.coalesce(func.sum(AuditEvent.cost_usd), 0.0))
-    ).one()
-    total_latency_ms, total_cost_usd = latency_cost_rows
+    if operational_ids:
+        latency_cost_rows = db.execute(
+            select(func.coalesce(func.sum(AuditEvent.latency_ms), 0), func.coalesce(func.sum(AuditEvent.cost_usd), 0.0))
+            .where(AuditEvent.invoice_id.in_(operational_ids))
+        ).one()
+        total_latency_ms, total_cost_usd = latency_cost_rows
+    else:
+        total_latency_ms, total_cost_usd = 0, 0.0
 
     status_counts: dict[str, int] = {}
-    for inv in db.scalars(select(Invoice)).all():
+    for inv in operational_invoices:
         status_counts[inv.status] = status_counts.get(inv.status, 0) + 1
     invoices_by_status = [{"status": k, "count": v} for k, v in sorted(status_counts.items())]
 
@@ -66,9 +81,13 @@ def get_operations_summary(db: Session) -> dict:
         entry["count"] += 1
     exceptions_by_control_list = sorted(exceptions_by_control.values(), key=lambda e: e["count"], reverse=True)
 
-    accounting_created = db.scalar(select(func.count()).select_from(AccountingBill)) or 0
+    accounting_created = (
+        db.scalar(select(func.count()).select_from(AccountingBill).where(AccountingBill.invoice_id.in_(operational_ids))) or 0
+        if operational_ids
+        else 0
+    )
 
-    jobs = db.scalars(select(Job)).all()
+    jobs = db.scalars(select(Job).where(Job.invoice_id.in_(operational_ids))).all() if operational_ids else []
     job_failures = {
         "transient": sum(1 for j in jobs if j.status == "failed_transient"),
         "permanent": sum(1 for j in jobs if j.status == "failed_permanent"),

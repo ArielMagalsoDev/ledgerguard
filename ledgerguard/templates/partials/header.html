@@ -11,7 +11,10 @@
   {"href": "/operations", "label": "Operations"}
 ] %}
 {% set try_nav = [{"href": "/try", "label": "Try your own invoice"}] if upload_sandbox_enabled else [] %}
-{% set external_nav = [{"href": AUTHOR.repository, "label": "GitHub", "external": true}] %}
+{% set external_nav = [
+  {"href": AUTHOR.linkedin, "label": "LinkedIn", "external": true},
+  {"href": AUTHOR.repository, "label": "GitHub", "external": true}
+] %}
 {% set mobile_nav = primary_nav + evidence_nav + try_nav + external_nav %}
 
 {% macro is_active(href) %}{% if href == '/' %}{{ 'is-active' if request.url.path == '/' else '' }}{% else %}{{ 'is-active' if request.url.path.startswith(href) else '' }}{% endif %}{% endmacro %}

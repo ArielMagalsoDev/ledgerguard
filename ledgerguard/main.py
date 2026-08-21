@@ -100,6 +100,17 @@ def _build_stats(false_clearance_rate: str) -> list[dict]:
 OUTCOME_ORDER = ["ready_for_approval", "exception_review", "duplicate_hold", "blocked"]
 
 
+def _eval_split_summary(metrics: dict, split: str) -> dict[str, int]:
+    """Return pass/total counts derived from the same per-category split
+    metrics shown on /evals. EvalRun.passed_cases/total_cases are always the
+    complete dataset, so they must never be labeled as held-out counts."""
+    by_category = (metrics or {}).get(split, {}).get("byCategory", {})
+    return {
+        "passed": sum(int(row.get("passed", 0)) for row in by_category.values()),
+        "total": sum(int(row.get("total", 0)) for row in by_category.values()),
+    }
+
+
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request, db: Session = Depends(db_session)):
     from .evals.latest_run import get_latest_run
@@ -107,10 +118,18 @@ def home(request: Request, db: Session = Depends(db_session)):
     run = get_latest_run(db)
     held_out_metrics = (run.metrics or {}).get("heldOut", {}) if run else {}
     false_clearance_rate = _format_metric(held_out_metrics.get("falseClearanceRate"), "pct") if run else "n/a"
+    held_out_summary = _eval_split_summary(run.metrics or {}, "heldOut") if run else None
     # Reuses the same get_latest_run() call above — the escalation strip's
     # metric can never quietly disagree with what /evals shows because it is
     # not a second query.
-    escalation_metric = {"value": f"{run.passed_cases}/{run.total_cases}", "label": "held-out cases passed"} if run else None
+    escalation_metric = (
+        {
+            "value": f"{held_out_summary['passed']}/{held_out_summary['total']}",
+            "label": "held-out cases passed",
+        }
+        if held_out_summary and held_out_summary["total"]
+        else None
+    )
 
     return templates.TemplateResponse(
         request,
@@ -142,8 +161,15 @@ def queue(request: Request, db: Session = Depends(db_session)):
 def evals(request: Request, db: Session = Depends(db_session)):
     from .evals.latest_run import get_latest_run, get_latest_upload_run
 
+    run = get_latest_run(db)
     return templates.TemplateResponse(
-        request, "evals.html", {"run": get_latest_run(db), "upload_run": get_latest_upload_run(db)}
+        request,
+        "evals.html",
+        {
+            "run": run,
+            "held_out_summary": _eval_split_summary(run.metrics or {}, "heldOut") if run else None,
+            "upload_run": get_latest_upload_run(db),
+        },
     )
 
 

@@ -3,16 +3,37 @@
 {% from "partials/recruiter_proof.html" import recruiter_proof %}
 
 {% block title %}Case study — LedgerGuard{% endblock %}
-{% block meta_description %}How Ariel Magalso designed and built a controlled AI invoice-exception workflow.{% endblock %}
+{% block meta_description %}How Ariel Magalso designed an integration-ready AI invoice automation workflow for finance teams across property, construction, retail, logistics, healthcare administration, and professional services.{% endblock %}
 
 {% block content %}
 {% set sections = [
-  {"title": "The problem", "body": "Accounts-payable teams repeatedly copy invoice data, verify arithmetic, search for purchase orders and receipts, check for duplicates, and decide who must review an exception. The work is repetitive, but a wrong answer can create a real financial loss."},
-  {"title": "The design decision", "body": "AI is used where documents are variable: locating and extracting candidate fields and drafting explanations. Code handles money, identity, duplicate rules, tolerances, routing, permissions, and idempotency. A model never decides that an invoice is financially safe."},
+  {"title": "The business problem", "body": "Accounts-payable teams repeatedly copy invoice data, verify arithmetic, reconcile purchase orders and receipts, check for duplicates and supplier-detail changes, and decide who must review each exception. Delays hold up suppliers and operations; a confident wrong answer can create a duplicate payment, misclassification, fraud exposure, or real financial loss."},
+  {"title": "Why implement this automation", "body": "The workflow is high-volume and repetitive, but it still contains judgment points that should remain accountable. Automating document preparation and deterministic checks can shorten review cycles, surface risky exceptions earlier, preserve a consistent audit trail, and let finance teams spend more time resolving discrepancies instead of re-keying routine data."},
+  {"title": "The solution", "body": "LedgerGuard uses AI where invoice layouts are variable: locating and extracting candidate fields and drafting evidence-linked explanations. Deterministic code handles money, identity, duplicate rules, tolerances, routing, permissions, and idempotency. A human reviews the prepared work, and the model never decides that an invoice is financially safe."},
+  {"title": "Expected workflow benefits", "body": "A suitable implementation can reduce manual preparation, standardize controls across teams and locations, make exception queues easier to prioritize, improve traceability, and create a reusable integration layer around existing finance systems. These are intended workflow benefits, not measured customer outcomes from this fictional portfolio demonstration."},
+  {"title": "Who can benefit", "body": "LedgerGuard is most relevant to organizations processing meaningful invoice volume across multiple suppliers, locations, purchase orders, receipts, or approval routes. Potential fits include facilities and property management, construction, hospitality, multi-site retail, manufacturing, logistics, healthcare administration, and professional-services companies with lean finance teams."},
+  {"title": "Third-party integration architecture", "body": "The workflow can be connected through APIs, webhooks, and system-specific adapters. It can receive documents and reference data, return status and evidence, notify reviewers, and prepare draft accounting records. The safety boundary remains unchanged: integrations may prepare work, but payment authorization stays outside the AI workflow."},
   {"title": "What I built", "body": "I independently designed and implemented the FastAPI application, Claude extraction pipeline, evidence alignment, PostgreSQL data model, matching and control engine, five-scenario workbench, approval queue, evaluation harness, operations dashboard, sandbox accounting adapter, and deployment."},
   {"title": "How risk is controlled", "body": "Every extracted field must point to document evidence. Monetary values are recalculated with decimal-safe code. Bank-detail changes are blocked, duplicate identity survives renamed files, embedded instructions remain untrusted document text, and every proposed external write carries an idempotency key."},
   {"title": "How it is evaluated", "body": "The evaluation runner sends labeled fictional invoices through the actual extraction, alignment, matching, and decision pipeline. Held-out and development splits are reported separately, failures remain visible, and critical false clearances are measured independently from field-level extraction errors."},
   {"title": "Current limitations", "body": "This is a portfolio demonstration, not a customer deployment. All entities and financial data are fictional. The public workflow intentionally stops before executing an accounting write or payment, and the evaluation set is still small compared with a production document population."},
+] %}
+
+{% set industry_profiles = [
+  {"title": "Facilities & property management", "body": "Recurring maintenance, security, cleaning, and repair invoices routed across properties and cost centers."},
+  {"title": "Construction", "body": "Subcontractor and materials invoices reconciled with project purchase orders, receipts, and tolerances."},
+  {"title": "Hospitality & multi-site retail", "body": "Distributed invoice intake standardized across locations while local managers retain approval authority."},
+  {"title": "Manufacturing & logistics", "body": "High-volume supplier charges checked against orders, deliveries, and approved commercial terms."},
+  {"title": "Healthcare administration", "body": "Non-clinical supplier invoices prepared for controlled review with evidence and audit history."},
+  {"title": "Professional services", "body": "Growing organizations reduce repetitive AP preparation without removing human financial oversight."}
+] %}
+
+{% set integration_groups = [
+  {"title": "Accounting & ERP", "examples": "QuickBooks, Xero, NetSuite, Sage, or SAP", "body": "Prepare draft bills, synchronize approved reference data, and return processing status through a controlled adapter."},
+  {"title": "Procurement", "examples": "Coupa, SAP Ariba, or internal purchasing systems", "body": "Read purchase orders, receipts, tolerance policies, supplier records, and approval ownership."},
+  {"title": "Document intake", "examples": "Email, Google Drive, SharePoint, S3, or secure upload", "body": "Receive invoices and supporting documents through APIs, webhooks, monitored inboxes, or storage events."},
+  {"title": "Collaboration & approvals", "examples": "Slack, Microsoft Teams, email, or internal workflow tools", "body": "Notify the correct reviewer, link to evidence, and return human decisions without granting the model authority."},
+  {"title": "Master and identity data", "examples": "Supplier master, PO, receipt, identity, and access-control systems", "body": "Compare extracted claims with authoritative records and enforce organization-specific permissions."}
 ] %}
 
 {% set hero_title %}Building AI automation that never moves money on a <span class="hero-halftone block">guess.</span>{% endset %}
@@ -60,6 +81,48 @@
     </article>
     {% endfor %}
   </div>
+
+  <section class="mt-24 border-t border-rule pt-20" aria-labelledby="industry-fit-title">
+    <p class="section-marker">Industry fit</p>
+    <h2 id="industry-fit-title" class="display-xl mt-8 max-w-4xl">A reusable control pattern for invoice-heavy operations.</h2>
+    <p class="mt-6 max-w-3xl text-base leading-relaxed text-ink-muted">These examples describe organizations that could benefit from this architecture. They are illustrative applications, not current LedgerGuard customers.</p>
+    <div class="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {% for profile in industry_profiles %}
+      <article class="rounded-[22px] border border-rule bg-paper-raised p-6">
+        <h3 class="font-display text-2xl font-medium tracking-[-0.04em] text-ink">{{ profile.title }}</h3>
+        <p class="mt-4 text-sm leading-relaxed text-ink-muted">{{ profile.body }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="mt-24 border-t border-rule pt-20" aria-labelledby="integration-title">
+    <div class="grid gap-8 lg:grid-cols-[0.7fr_1.3fr]">
+      <div>
+        <p class="section-marker">Integration-ready design</p>
+        <h2 id="integration-title" class="mt-8 font-display text-5xl font-medium tracking-[-0.055em] text-ink">Connect the controls to the systems already in use.</h2>
+      </div>
+      <div>
+        <p class="max-w-3xl text-base leading-relaxed text-ink-muted">LedgerGuard can exchange documents, reference data, workflow state, and draft records through APIs, webhooks, and adapters. The current portfolio build includes a sandbox accounting adapter only; the named external platforms below are integration examples, not deployed connectors.</p>
+        <div class="mt-10 border-y border-rule">
+          {% for integration in integration_groups %}
+          <article class="grid gap-3 border-b border-rule py-7 last:border-b-0 sm:grid-cols-[0.8fr_1.2fr] sm:gap-8">
+            <div>
+              <h3 class="font-display text-2xl font-medium tracking-[-0.04em] text-ink">{{ integration.title }}</h3>
+              <p class="mt-2 font-tabular text-[11px] leading-relaxed text-ink-faint">{{ integration.examples }}</p>
+            </div>
+            <p class="text-sm leading-relaxed text-ink-muted">{{ integration.body }}</p>
+          </article>
+          {% endfor %}
+        </div>
+        <div class="mt-8 rounded-[20px] border border-rule bg-paper-raised p-6">
+          <p class="text-sm font-semibold text-ink">Safety boundary</p>
+          <p class="mt-2 text-sm leading-relaxed text-ink-muted">Connected systems may supply evidence and receive prepared draft records. A named human remains responsible for approval, and no integration grants the AI permission to execute payment.</p>
+        </div>
+        <a href="/architecture" class="mt-8 inline-flex items-center gap-2 text-sm font-semibold hover:opacity-55">Inspect the integration architecture →</a>
+      </div>
+    </div>
+  </section>
 
   <div class="mt-24 flex flex-col gap-8 rounded-[28px] border border-rule bg-paper-raised p-8 text-ink shadow-[0_24px_70px_-56px_rgba(19,19,22,.55)] sm:flex-row sm:items-center sm:justify-between sm:p-12">
     <div>

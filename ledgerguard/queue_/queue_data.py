@@ -10,7 +10,14 @@ TERMINAL_ACTIONS = ("approved", "rejected")
 
 
 def get_queue_items(db: Session) -> list[dict]:
-    invoices = db.scalars(select(Invoice).where(Invoice.status.in_(GROUPS)).order_by(Invoice.created_at.desc())).all()
+    invoices = db.scalars(
+        select(Invoice)
+        .where(
+            Invoice.status.in_(GROUPS),
+            ~Invoice.submission_id.like("sub_eval_%"),
+        )
+        .order_by(Invoice.created_at.desc())
+    ).all()
     items = []
     for inv in invoices:
         decision = db.scalar(select(Decision).where(Decision.invoice_id == inv.id))

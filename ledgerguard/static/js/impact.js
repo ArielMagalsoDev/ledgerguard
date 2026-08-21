@@ -50,7 +50,8 @@
 
       var eligibleInvoices = Math.round(invoices * (straightThrough / 100));
       var hoursReturned = (eligibleInvoices * minutes) / 60;
-      var exceptionCount = Math.round(invoices * 0.25);
+      var remainingManualCount = invoices - eligibleInvoices;
+      var remainingManualPct = invoices ? Math.round((remainingManualCount / invoices) * 100) : 0;
       var grossLaborSavings = hoursReturned * laborCost;
       var automationCost = invoices * automationCostPer;
       var netMonthlySavings = grossLaborSavings - automationCost;
@@ -63,7 +64,7 @@
       if (outHours) outHours.textContent = Math.round(hoursReturned).toLocaleString() + " hrs";
       if (outSavings) outSavings.textContent = fmtMoney(netMonthlySavings);
       if (outEligible) outEligible.textContent = eligibleInvoices.toLocaleString() + " invoices";
-      if (outExceptions) outExceptions.textContent = "25% (" + exceptionCount.toLocaleString() + "/mo)";
+      if (outExceptions) outExceptions.textContent = remainingManualPct + "% (" + remainingManualCount.toLocaleString() + "/mo)";
       if (outAutomationCost) outAutomationCost.textContent = fmtMoney(automationCost) + "/mo";
       if (outCostPerInvoice) outCostPerInvoice.textContent = "$" + costPerInvoice.toFixed(2);
     }

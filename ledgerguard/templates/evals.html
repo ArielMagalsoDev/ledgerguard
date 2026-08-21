@@ -104,19 +104,20 @@
   <section class="mt-10">
     <div class="flex flex-wrap items-center justify-between gap-2 border-b border-rule-strong pb-2">
       <h2 class="font-display text-2xl font-normal text-ink">Held-out metrics — production proof</h2>
-      <span class="font-tabular text-sm font-semibold {{ 'text-ready' if run.passed_cases == run.total_cases else 'text-exception' }}">
-        {{ run.passed_cases }}/{{ run.total_cases }} cases passed overall
+      <span class="font-tabular text-sm font-semibold {{ 'text-ready' if held_out_summary.passed == held_out_summary.total else 'text-exception' }}">
+        {{ held_out_summary.passed }}/{{ held_out_summary.total }} held-out cases passed
       </span>
     </div>
     <p class="mt-2 text-xs text-ink-faint">
-      {{ run.run_at.strftime("%Y-%m-%d %H:%M") }} · policy {{ run.policy_version }} · these numbers are computed only
+      {{ run.run_at.strftime("%Y-%m-%d %H:%M") }} UTC · policy {{ run.policy_version }} · these numbers are computed only
       over the held-out split — cases never used to tune anything. CLAUDE.md section 15: a dev-set score is
       never presented as production proof.
     </p>
     <div class="mt-4 rounded-[var(--radius-card)] border border-rule bg-paper-raised p-5 text-sm text-ink-muted">
       <strong class="text-ink">How to read the headline:</strong> the held-out score and complete-dataset
-      score measure different splits. The held-out cases are reserved from tuning; the overall count also
-      includes development cases. Failed field-level checks remain visible below and do not get folded into
+      score measure different splits. The held-out result is {{ held_out_summary.passed }}/{{ held_out_summary.total }};
+      the complete dataset result is {{ run.passed_cases }}/{{ run.total_cases }} and also includes development cases.
+      Failed field-level checks remain visible below and do not get folded into
       the critical-control false-clearance metric.
     </div>
     <div class="mt-4">
@@ -240,7 +241,7 @@
     {% endif %}
 
     {% if upload_run %}
-    <p class="mt-2 text-xs text-ink-faint">{{ upload_run.run_at.strftime("%Y-%m-%d %H:%M") }}</p>
+    <p class="mt-2 text-xs text-ink-faint">{{ upload_run.run_at.strftime("%Y-%m-%d %H:%M") }} UTC</p>
     <div class="mt-4 overflow-x-auto">
       <table class="w-full min-w-[560px] text-left text-sm">
         <thead>
